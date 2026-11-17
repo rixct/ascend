@@ -43,4 +43,11 @@ for line in sys.stdin:
     if log != '-':
         with open(log, 'a') as output:
             output.write(json.dumps(command) + '\n')
-    print(json.dumps({'ok': True, 'timer': {'active': None}}), flush=True)
+    try:
+        print(json.dumps({'ok': True, 'timer': {'active': None}}), flush=True)
+    except BrokenPipeError:
+        try:
+            sys.stdout.close()
+        except BrokenPipeError:
+            pass
+        sys.exit(0)

@@ -135,7 +135,10 @@ final class EngineProcess: @unchecked Sendable {
         DispatchQueue.main.async { completion(.failure(error)) }
         return
       }
-      let result = autoreleasepool { Result { try exchange(command) } }
+      // Do not drain an autorelease pool around the returned value. On the CI
+      // runner that freed decoder temporaries still referenced by the result
+      // and the process died with SIGTRAP.
+      let result = Result { try exchange(command) }
       if case .failure = result { shutdown() }
       DispatchQueue.main.async { completion(result) }
     }

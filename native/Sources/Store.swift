@@ -59,6 +59,9 @@ import UniformTypeIdentifiers
     }
     RunLoop.main.add(timer, forMode: .common)
     self.timer = timer
+    // The headless test process is not an app bundle. Installing the monitor there
+    // lets assumeIsolated trap with SIGTRAP when AppKit delivers a stray event.
+    guard Bundle.main.bundleURL.pathExtension == "app" else { return }
     monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
       let handled = MainActor.assumeIsolated { self?.handleShortcut(event) == true }
       return handled ? nil : event

@@ -168,6 +168,9 @@ enum FocusBrowser {
   }
   func start() {
     guard observer == nil else { return }
+    // Headless tests are not app bundles. NSWorkspace can deliver activation
+    // events there and trip a main-actor check with SIGTRAP.
+    guard Bundle.main.bundleURL.pathExtension == "app" else { return }
     observer = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
     ) { [weak self] _ in
