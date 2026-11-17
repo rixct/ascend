@@ -1,0 +1,14 @@
+/target/
+/dist/
+/.toolchain/
+/.local/
+.DS_Store
+__pycache__/
+*.py[cod]
+*.sqlite3*
+*.dmg
+.idea/
+.vscode/
+DerivedData/
+*.xcuserstate
+*.dSYM

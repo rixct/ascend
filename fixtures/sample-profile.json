@@ -1,0 +1,2258 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-11-17T10:03:20.014068Z",
+  "character_xp_milli": 405000,
+  "settings": {
+    "name": "Тестовый профиль",
+    "bio": "Профиль для ручной проверки экранов.",
+    "dark": true,
+    "growth_percent": 10,
+    "daily_minutes": 90,
+    "onboarded": true,
+    "strict_mode": false
+  },
+  "skills": [
+    {
+      "id": "a0c69284-1cb3-438e-976d-6a9a21e5c34a",
+      "title": "Основы",
+      "domain": "Mind",
+      "description": "",
+      "xp_milli": 10000,
+      "mastery": 1,
+      "evidence": [
+        "Первая глава прочитана и пересказана."
+      ],
+      "prerequisites": [],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "title": "Английский",
+      "domain": "Mind",
+      "description": "Чтение, времена и разговор.",
+      "xp_milli": 348000,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [
+        "a0c69284-1cb3-438e-976d-6a9a21e5c34a"
+      ],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "18c93f3d-d151-4372-9dfe-8fa1e9b02776",
+      "title": "Архитектура",
+      "domain": "Mind",
+      "description": "",
+      "xp_milli": 0,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [
+        "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a"
+      ],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "title": "Тело",
+      "domain": "Body",
+      "description": "",
+      "xp_milli": 9000,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "e76aa5bf-b9e8-422f-84b0-4c060700c8d2",
+      "title": "Порядок",
+      "domain": "Organization",
+      "description": "",
+      "xp_milli": 24000,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "title": "Общение",
+      "domain": "Social",
+      "description": "",
+      "xp_milli": 6000,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [],
+      "allowed_apps": [],
+      "allowed_sites": []
+    },
+    {
+      "id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "title": "Сон",
+      "domain": "Recovery",
+      "description": "",
+      "xp_milli": 8000,
+      "mastery": 0,
+      "evidence": [],
+      "prerequisites": [],
+      "allowed_apps": [],
+      "allowed_sites": []
+    }
+  ],
+  "quests": [
+    {
+      "id": "cbaf70e4-1cf8-416e-b1b1-fb1966b4e2ef",
+      "title": "Первая глава",
+      "outcome": "Практика: Первая глава",
+      "skill_id": "a0c69284-1cb3-438e-976d-6a9a21e5c34a",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 25,
+      "planned_sessions": 1,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Completed",
+      "created_at": "2026-11-17T10:03:20.014192Z"
+    },
+    {
+      "id": "18578538-20e7-41a3-924a-700c12353477",
+      "title": "Читать 15 минут",
+      "outcome": "Практика: Читать 15 минут",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Habit",
+      "priority": 3,
+      "estimate_minutes": 15,
+      "planned_sessions": 30,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014380Z"
+    },
+    {
+      "id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+      "title": "Все времена",
+      "outcome": "Практика: Все времена",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 25,
+      "planned_sessions": 12,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014386Z"
+    },
+    {
+      "id": "db71d0ba-ba79-4531-8220-4fdc581e0689",
+      "title": "Пересказ главы",
+      "outcome": "Практика: Пересказ главы",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 20,
+      "planned_sessions": 3,
+      "difficulty": 1.5,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Completed",
+      "created_at": "2026-11-17T10:03:20.014392Z"
+    },
+    {
+      "id": "40b71ca6-fae4-4f36-a7ad-d3e4454f3c1c",
+      "title": "Свободный разговор",
+      "outcome": "Практика: Свободный разговор",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 3,
+      "estimate_minutes": 25,
+      "planned_sessions": 4,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [
+        "db71d0ba-ba79-4531-8220-4fdc581e0689"
+      ],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014398Z"
+    },
+    {
+      "id": "a5a2ec69-22b2-4a59-8bd1-94108048c072",
+      "title": "Продвинутый разговор",
+      "outcome": "Практика: Продвинутый разговор",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 25,
+      "planned_sessions": 4,
+      "difficulty": 1.5,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [
+        "40b71ca6-fae4-4f36-a7ad-d3e4454f3c1c"
+      ],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014405Z"
+    },
+    {
+      "id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "title": "Танебаум",
+      "outcome": "Прочитана «Архитектура компьютера»",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Project",
+      "priority": 3,
+      "estimate_minutes": 45,
+      "planned_sessions": 12,
+      "difficulty": 1.5,
+      "bonus_milli": 20000,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [
+        {
+          "id": "a22342c3-116b-4ed7-8fac-eddab894342d",
+          "title": "Структура компьютера",
+          "done": true
+        },
+        {
+          "id": "bccce8d5-aef2-42e8-a437-fe07ea083139",
+          "title": "Цифровая логика",
+          "done": true
+        },
+        {
+          "id": "3d04a010-d39b-40ec-80d5-18d0c9bfc1db",
+          "title": "Микроархитектура",
+          "done": true
+        },
+        {
+          "id": "2a26f935-941e-49c9-9618-3e62792a850a",
+          "title": "Набор команд",
+          "done": false
+        },
+        {
+          "id": "f2d4267b-5965-4a7e-afb4-50b5f9975c2b",
+          "title": "Операционная система",
+          "done": false
+        },
+        {
+          "id": "e3ffd0b9-41a9-4e18-a0d5-e8c5315f0771",
+          "title": "Ассемблер",
+          "done": false
+        },
+        {
+          "id": "9c13317f-e16a-407c-bb6f-e9ffae6dc2e7",
+          "title": "Параллельные системы",
+          "done": false
+        },
+        {
+          "id": "f84002e4-5fd2-4fa5-84d6-6295ecc3d675",
+          "title": "Заключение",
+          "done": false
+        }
+      ],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014445Z"
+    },
+    {
+      "id": "827fe36a-815e-434c-90a5-35cca244bad4",
+      "title": "Короткий рассказ",
+      "outcome": "Практика: Короткий рассказ",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Project",
+      "priority": 2,
+      "estimate_minutes": 30,
+      "planned_sessions": 3,
+      "difficulty": 1.0,
+      "bonus_milli": 8000,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Completed",
+      "created_at": "2026-11-17T10:03:20.014488Z"
+    },
+    {
+      "id": "c46d152c-fd82-4883-8215-fdd6938dcf9c",
+      "title": "Черновик эссе",
+      "outcome": "Практика: Черновик эссе",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 1,
+      "estimate_minutes": 30,
+      "planned_sessions": 2,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Paused",
+      "created_at": "2026-11-17T10:03:20.014522Z"
+    },
+    {
+      "id": "289648b5-197d-4049-9285-22c6961ad232",
+      "title": "Старый план",
+      "outcome": "Практика: Старый план",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 1,
+      "estimate_minutes": 20,
+      "planned_sessions": 2,
+      "difficulty": 0.5,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Cancelled",
+      "created_at": "2026-11-17T10:03:20.014529Z"
+    },
+    {
+      "id": "b19aba70-dd54-46c9-ad66-6f0dd5957216",
+      "title": "Глава к сроку",
+      "outcome": "Практика: Глава к сроку",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 25,
+      "planned_sessions": 2,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": "2026-11-16",
+      "dependencies": [],
+      "steps": [],
+      "status": "Missed",
+      "created_at": "2026-11-17T10:03:20.014535Z"
+    },
+    {
+      "id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "title": "Зарядка",
+      "outcome": "Практика: Зарядка",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "kind": "Habit",
+      "priority": 2,
+      "estimate_minutes": 20,
+      "planned_sessions": 21,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014541Z"
+    },
+    {
+      "id": "08e6e337-334e-4229-9dba-90ce80470cf6",
+      "title": "Разобрать неделю",
+      "outcome": "Практика: Разобрать неделю",
+      "skill_id": "e76aa5bf-b9e8-422f-84b0-4c060700c8d2",
+      "kind": "Daily",
+      "priority": 2,
+      "estimate_minutes": 30,
+      "planned_sessions": 4,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014547Z"
+    },
+    {
+      "id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "title": "Разговор 10 минут",
+      "outcome": "Практика: Разговор 10 минут",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "kind": "Habit",
+      "priority": 2,
+      "estimate_minutes": 10,
+      "planned_sessions": 14,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014552Z"
+    },
+    {
+      "id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "title": "Сон в одно время",
+      "outcome": "Практика: Сон в одно время",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "kind": "Habit",
+      "priority": 3,
+      "estimate_minutes": 10,
+      "planned_sessions": 14,
+      "difficulty": 1.0,
+      "bonus_milli": 0,
+      "deadline": null,
+      "dependencies": [],
+      "steps": [],
+      "status": "Planned",
+      "created_at": "2026-11-17T10:03:20.014558Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "02e61140-8eea-43f5-852d-37fd06cd785e",
+      "quest_id": "cbaf70e4-1cf8-416e-b1b1-fb1966b4e2ef",
+      "skill_id": "a0c69284-1cb3-438e-976d-6a9a21e5c34a",
+      "day": "2026-10-28",
+      "completed_at": "2026-10-28T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1500,
+      "credited_seconds": 1500,
+      "estimate_minutes": 25,
+      "difficulty": 1.0,
+      "reward_milli": 10000,
+      "explanation": "10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "60013169-888f-4799-820f-626c270e3c19",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-16",
+      "completed_at": "2026-11-16T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "5bd3ef8b-ebb0-42a3-80ea-d29d4bf458d4",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "9196aa4c-8f39-4635-b3c3-1ed79227ba86",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "2169aaef-95f2-4677-ad33-3f71dddb1874",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "43fca61c-7d55-488a-b198-12da578150ac",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-12",
+      "completed_at": "2026-11-12T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "91f2625f-cc8f-4972-90fe-4ff024d6b53b",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-11",
+      "completed_at": "2026-11-11T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "324e7151-dc1f-4387-8b9b-2c5d1ac26b70",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-10",
+      "completed_at": "2026-11-10T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "a1f031dc-f5c1-4a97-a0a2-230d8b003ada",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-09",
+      "completed_at": "2026-11-09T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "6025c687-e0d9-4a02-b009-a45aaecbe5aa",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-08",
+      "completed_at": "2026-11-08T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "96e43819-b495-47d6-922e-36d5d2dbb44b",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-07",
+      "completed_at": "2026-11-07T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "bd2c87f2-3a4b-4004-b53a-2263f14ab4a6",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-06",
+      "completed_at": "2026-11-06T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "8f758f35-b479-4d9b-95b5-f594adad56dd",
+      "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-05",
+      "completed_at": "2026-11-05T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 900,
+      "credited_seconds": 900,
+      "estimate_minutes": 15,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "e615b32c-4511-44d5-97a4-149a48d58be7",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-17",
+      "completed_at": "2026-11-17T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "55697ad6-411d-477d-bed5-dcfba6e18d7d",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-16",
+      "completed_at": "2026-11-16T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "4f631f12-b191-4237-b3bc-ca68255f4af4",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "52bda8af-4e5f-44fa-8cb4-62ac3d00239a",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "46a04fe1-a4ca-497d-8497-5e41c130e2e6",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "ece06b72-a02e-4135-89ae-18adc19515b3",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-12",
+      "completed_at": "2026-11-12T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "fbcfdebf-9639-47e8-99e6-2c34d9da763e",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-11",
+      "completed_at": "2026-11-11T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "b97a768b-f2d8-45d1-96a8-b304575136f4",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-10",
+      "completed_at": "2026-11-10T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "cf3e713f-3ca2-407c-b123-d29d7bf3b26d",
+      "quest_id": "56894300-9b7d-48f7-947a-54c5b8c7e2ac",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "day": "2026-11-09",
+      "completed_at": "2026-11-09T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "e71b26ad-3c65-4f85-b8d6-54c7d72475c0",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "ed6fd9ec-bdf0-4f6e-80ca-5d45de7d88b6",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "c60b4e59-c757-4203-bcb6-eecf91d09a2e",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "a87183c5-858e-495f-a6de-c036654ba6b3",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-12",
+      "completed_at": "2026-11-12T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "bf8dec50-155b-4d00-b873-b8827fb3d5ae",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-11",
+      "completed_at": "2026-11-11T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "9943ca88-218f-424c-8824-1c4ac48d0565",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-10",
+      "completed_at": "2026-11-10T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "d063379f-cf85-4c3f-a5c4-209aec8a8dac",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-09",
+      "completed_at": "2026-11-09T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "1f5fc829-d17c-4e7e-970f-a7d6dd1fca4d",
+      "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+      "skill_id": "a58878fd-84ec-4242-80eb-f55dfdfc66e4",
+      "day": "2026-11-08",
+      "completed_at": "2026-11-08T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "5c3dbd1f-a050-4dfd-aad7-c62c441cca68",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-16",
+      "completed_at": "2026-11-16T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "b02c0dd4-b928-463d-a350-b5f5bb72bd70",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "47c8c3b1-cbd6-4e3c-a957-fd4c0e95f596",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "4fcc78ee-abcf-46d1-8904-9971e6caf232",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "ebf323ff-a5b6-44cb-b382-67be375df648",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-12",
+      "completed_at": "2026-11-12T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "d859e7f6-ff21-4087-89e9-b7d5e1ca7887",
+      "quest_id": "78623429-3ca6-429b-bbee-15dd62a6189a",
+      "skill_id": "168514ff-3774-436a-a5fa-ae4c09ae0686",
+      "day": "2026-11-11",
+      "completed_at": "2026-11-11T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 600,
+      "credited_seconds": 600,
+      "estimate_minutes": 10,
+      "difficulty": 1.0,
+      "reward_milli": 1000,
+      "explanation": "Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "2d6c502a-fc0a-4541-ad3e-4c423aeffdf8",
+      "quest_id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1500,
+      "credited_seconds": 1500,
+      "estimate_minutes": 25,
+      "difficulty": 1.0,
+      "reward_milli": 10000,
+      "explanation": "10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "feb4ace8-0fe4-4511-822a-271112412e80",
+      "quest_id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1500,
+      "credited_seconds": 1500,
+      "estimate_minutes": 25,
+      "difficulty": 1.0,
+      "reward_milli": 10000,
+      "explanation": "10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "b4c89b8b-c86d-496b-a96b-8ba2f1d03857",
+      "quest_id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-10",
+      "completed_at": "2026-11-10T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1500,
+      "credited_seconds": 1500,
+      "estimate_minutes": 25,
+      "difficulty": 1.0,
+      "reward_milli": 10000,
+      "explanation": "10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "121ddfae-3ba9-450d-9d47-124400d2befa",
+      "quest_id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-08",
+      "completed_at": "2026-11-08T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1500,
+      "credited_seconds": 1500,
+      "estimate_minutes": 25,
+      "difficulty": 1.0,
+      "reward_milli": 10000,
+      "explanation": "10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "34c0f19c-d7de-419c-9947-b1a1a0dca235",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-16",
+      "completed_at": "2026-11-16T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "f5c00ef8-fb00-4020-9de6-a63ea9da3191",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-15",
+      "completed_at": "2026-11-15T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "73ee8296-1cf0-45bb-85dc-1e058cf89cd7",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "bedcf368-69c3-4a7e-9d4c-1e578896333b",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-13",
+      "completed_at": "2026-11-13T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "36d5c22d-9579-444a-9ddb-0a600dad9e41",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-11",
+      "completed_at": "2026-11-11T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "45dba5bd-8949-40d8-a431-18bc8acb77d4",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-09",
+      "completed_at": "2026-11-09T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "ce9994d9-8844-4693-91da-94e550fe8317",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-07",
+      "completed_at": "2026-11-07T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "fbfb5203-21bb-40bb-9755-381a27df9261",
+      "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-06",
+      "completed_at": "2026-11-06T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 2700,
+      "credited_seconds": 2700,
+      "estimate_minutes": 45,
+      "difficulty": 1.5,
+      "reward_milli": 27000,
+      "explanation": "10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "8511314e-bdeb-462e-947e-755b63f58df9",
+      "quest_id": "827fe36a-815e-434c-90a5-35cca244bad4",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-03",
+      "completed_at": "2026-11-03T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1800,
+      "credited_seconds": 1800,
+      "estimate_minutes": 30,
+      "difficulty": 1.0,
+      "reward_milli": 12000,
+      "explanation": "10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "06ed6de5-e476-47e6-b0eb-74e3704c271b",
+      "quest_id": "827fe36a-815e-434c-90a5-35cca244bad4",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-04",
+      "completed_at": "2026-11-04T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1800,
+      "credited_seconds": 1800,
+      "estimate_minutes": 30,
+      "difficulty": 1.0,
+      "reward_milli": 12000,
+      "explanation": "10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "c41f6c0d-13e0-48df-8991-8f6357735cb3",
+      "quest_id": "827fe36a-815e-434c-90a5-35cca244bad4",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-05",
+      "completed_at": "2026-11-05T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1800,
+      "credited_seconds": 1800,
+      "estimate_minutes": 30,
+      "difficulty": 1.0,
+      "reward_milli": 20000,
+      "explanation": "10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25. + 8.00 XP: бонус этапа, не выше XP практики по этому этапу.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "c970bace-a48b-4241-a1e3-3c73983891a9",
+      "quest_id": "db71d0ba-ba79-4531-8220-4fdc581e0689",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-07",
+      "completed_at": "2026-11-07T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.5,
+      "reward_milli": 12000,
+      "explanation": "10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "30194012-0e96-4854-bd50-cbce29953906",
+      "quest_id": "db71d0ba-ba79-4531-8220-4fdc581e0689",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-08",
+      "completed_at": "2026-11-08T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.5,
+      "reward_milli": 12000,
+      "explanation": "10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "9c399873-3be3-4080-b1bf-bdaf3221aeb7",
+      "quest_id": "db71d0ba-ba79-4531-8220-4fdc581e0689",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "day": "2026-11-09",
+      "completed_at": "2026-11-09T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1200,
+      "credited_seconds": 1200,
+      "estimate_minutes": 20,
+      "difficulty": 1.5,
+      "reward_milli": 12000,
+      "explanation": "10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": true,
+      "strict": false
+    },
+    {
+      "id": "2f771cc4-43da-4451-bdb5-5f4703df1352",
+      "quest_id": "08e6e337-334e-4229-9dba-90ce80470cf6",
+      "skill_id": "e76aa5bf-b9e8-422f-84b0-4c060700c8d2",
+      "day": "2026-11-12",
+      "completed_at": "2026-11-12T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1800,
+      "credited_seconds": 1800,
+      "estimate_minutes": 30,
+      "difficulty": 1.0,
+      "reward_milli": 12000,
+      "explanation": "10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    },
+    {
+      "id": "f6abdc9c-a5b9-488b-bf4a-87cb2a4c6d42",
+      "quest_id": "08e6e337-334e-4229-9dba-90ce80470cf6",
+      "skill_id": "e76aa5bf-b9e8-422f-84b0-4c060700c8d2",
+      "day": "2026-11-14",
+      "completed_at": "2026-11-14T15:00:00Z",
+      "utc_offset_seconds": 10800,
+      "seconds": 1800,
+      "credited_seconds": 1800,
+      "estimate_minutes": 30,
+      "difficulty": 1.0,
+      "reward_milli": 12000,
+      "explanation": "10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25.",
+      "result": "Сессия записана для проверки",
+      "completed_quest": false,
+      "strict": false
+    }
+  ],
+  "plans": [
+    {
+      "day": "2026-11-17",
+      "created_at": "2026-11-17T10:03:20.014595Z",
+      "items": [
+        {
+          "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+          "weight": 3.0,
+          "estimate_minutes": 15,
+          "completed": false,
+          "excused": false
+        },
+        {
+          "quest_id": "79836a3f-7ede-407b-aff0-df9b5f85d520",
+          "weight": 2.0,
+          "estimate_minutes": 25,
+          "completed": false,
+          "excused": false
+        },
+        {
+          "quest_id": "7624c4f9-d320-4817-86c5-74b0274947c9",
+          "weight": 3.0,
+          "estimate_minutes": 45,
+          "completed": false,
+          "excused": false
+        }
+      ],
+      "rest": false,
+      "reason": ""
+    },
+    {
+      "day": "2026-11-11",
+      "created_at": "2026-11-17T10:03:20.014613Z",
+      "items": [
+        {
+          "quest_id": "18578538-20e7-41a3-924a-700c12353477",
+          "weight": 3.0,
+          "estimate_minutes": 15,
+          "completed": true,
+          "excused": false
+        },
+        {
+          "quest_id": "d468f597-0e7c-4cb1-b0b1-b481d6432bb6",
+          "weight": 3.0,
+          "estimate_minutes": 10,
+          "completed": true,
+          "excused": false
+        },
+        {
+          "quest_id": "08e6e337-334e-4229-9dba-90ce80470cf6",
+          "weight": 2.0,
+          "estimate_minutes": 30,
+          "completed": false,
+          "excused": true
+        }
+      ],
+      "rest": false,
+      "reason": "Не хватило вечера"
+    },
+    {
+      "day": "2026-11-06",
+      "created_at": "2026-11-17T10:03:20.014620Z",
+      "items": [],
+      "rest": true,
+      "reason": "День без плана"
+    }
+  ],
+  "targets": [
+    {
+      "id": "6f782baf-5a88-486a-9acc-2864c85e9afb",
+      "week": "2026-11-16",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "target": 180.0,
+      "weight": 2.0,
+      "unit": "Minutes"
+    },
+    {
+      "id": "b7209892-603f-4acb-b098-2099997df290",
+      "week": "2026-11-16",
+      "skill_id": "4e413f19-e5cf-45af-9317-9a270660ffbd",
+      "target": 4.0,
+      "weight": 1.0,
+      "unit": "Sessions"
+    },
+    {
+      "id": "5bbfd501-8735-4980-b8bd-7269e96fbb5d",
+      "week": "2026-11-09",
+      "skill_id": "2e056d83-2bfc-47a5-b2de-3c83c1cc8f9a",
+      "target": 120.0,
+      "weight": 1.5,
+      "unit": "Minutes"
+    }
+  ],
+  "checkins": [
+    {
+      "day": "2026-11-17",
+      "energy": 70,
+      "fatigue": 20,
+      "focus": 60,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-16",
+      "energy": 62,
+      "fatigue": 30,
+      "focus": 70,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-15",
+      "energy": 54,
+      "fatigue": 40,
+      "focus": 80,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-14",
+      "energy": 46,
+      "fatigue": 50,
+      "focus": 60,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-13",
+      "energy": 38,
+      "fatigue": 20,
+      "focus": 70,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-12",
+      "energy": 70,
+      "fatigue": 30,
+      "focus": 80,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-11",
+      "energy": 62,
+      "fatigue": 40,
+      "focus": 60,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-10",
+      "energy": 54,
+      "fatigue": 50,
+      "focus": 70,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-09",
+      "energy": 46,
+      "fatigue": 20,
+      "focus": 80,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-08",
+      "energy": 38,
+      "fatigue": 30,
+      "focus": 60,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-07",
+      "energy": 70,
+      "fatigue": 40,
+      "focus": 70,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-06",
+      "energy": 62,
+      "fatigue": 50,
+      "focus": 80,
+      "available_minutes": 90,
+      "unwell": true
+    },
+    {
+      "day": "2026-11-05",
+      "energy": 54,
+      "fatigue": 20,
+      "focus": 60,
+      "available_minutes": 90,
+      "unwell": false
+    },
+    {
+      "day": "2026-11-04",
+      "energy": 46,
+      "fatigue": 30,
+      "focus": 70,
+      "available_minutes": 90,
+      "unwell": false
+    }
+  ],
+  "journal": [
+    {
+      "id": "38146665-2096-448f-aaeb-b56fbaa42943",
+      "day": "2026-11-16",
+      "text": "Прочитал главу про настоящее совершённое и записал примеры."
+    },
+    {
+      "id": "d86a92dc-5f3a-45fb-85e5-c16af729162d",
+      "day": "2026-11-14",
+      "text": "Зарядка далась легче, чем на прошлой неделе."
+    },
+    {
+      "id": "e35ad172-7570-4e56-a938-9e2a6e6c8bde",
+      "day": "2026-11-11",
+      "text": "Вечер ушёл на пересказ, разговор отложил."
+    },
+    {
+      "id": "6da8b872-6a41-49b2-a52a-0517ee3f00d9",
+      "day": "2026-11-08",
+      "text": "Танебаум: глава про систему команд."
+    },
+    {
+      "id": "b8151397-6e82-4d13-97ee-e32fe6549fd1",
+      "day": "2026-11-05",
+      "text": "Короткий рассказ закончен, без лишних правок."
+    }
+  ],
+  "events": [
+    {
+      "id": "c64a8be6-099a-4873-8298-654dd57ea61b",
+      "at": "2026-11-17T10:03:20.014376Z",
+      "kind": "quest_created",
+      "description": "Создано: Первая глава. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "750a8bbd-9af1-4f80-87ca-fc22a79c0dd6",
+      "at": "2026-11-17T10:03:20.014384Z",
+      "kind": "quest_created",
+      "description": "Создано: Читать 15 минут. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "9d6b8475-9a03-45a3-a637-8287f9caf0e1",
+      "at": "2026-11-17T10:03:20.014389Z",
+      "kind": "quest_created",
+      "description": "Создано: Все времена. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "6606477e-e64c-476c-b69f-3c05a308600f",
+      "at": "2026-11-17T10:03:20.014395Z",
+      "kind": "quest_created",
+      "description": "Создано: Пересказ главы. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "385622ca-c4e6-425f-89b4-af13ae84f8a3",
+      "at": "2026-11-17T10:03:20.014402Z",
+      "kind": "quest_created",
+      "description": "Создано: Свободный разговор. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "1e4bf7b7-c4da-44f1-b4bc-786893a2b12d",
+      "at": "2026-11-17T10:03:20.014408Z",
+      "kind": "quest_created",
+      "description": "Создано: Продвинутый разговор. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "0a5188cc-7ed3-49dc-a199-c807fd3b887a",
+      "at": "2026-11-17T10:03:20.014486Z",
+      "kind": "quest_created",
+      "description": "Создано: Танебаум. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "725cc1ba-4e31-4d8b-b330-aa905329d375",
+      "at": "2026-11-17T10:03:20.014520Z",
+      "kind": "quest_created",
+      "description": "Создано: Короткий рассказ. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "24a61577-764b-4f1b-8ebb-41b860b29aa0",
+      "at": "2026-11-17T10:03:20.014526Z",
+      "kind": "quest_created",
+      "description": "Создано: Черновик эссе. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "6b75ed03-233f-4205-8bd0-52a5f3d8dc45",
+      "at": "2026-11-17T10:03:20.014532Z",
+      "kind": "quest_created",
+      "description": "Создано: Старый план. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "6f717c0c-a619-4f36-9b4a-27675d7d7aaf",
+      "at": "2026-11-17T10:03:20.014538Z",
+      "kind": "quest_created",
+      "description": "Создано: Глава к сроку. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "4e65a312-ec32-41ef-bb5b-fc13603f8d43",
+      "at": "2026-11-17T10:03:20.014544Z",
+      "kind": "quest_created",
+      "description": "Создано: Зарядка. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "e66c8f82-3291-48df-a564-67da9e3f00ec",
+      "at": "2026-11-17T10:03:20.014550Z",
+      "kind": "quest_created",
+      "description": "Создано: Разобрать неделю. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "5e68ee09-0813-4321-9bab-19d6daf14fa6",
+      "at": "2026-11-17T10:03:20.014556Z",
+      "kind": "quest_created",
+      "description": "Создано: Разговор 10 минут. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "8c31fb01-9fcf-4b9c-ad98-8e5a9351c2c5",
+      "at": "2026-11-17T10:03:20.014561Z",
+      "kind": "quest_created",
+      "description": "Создано: Сон в одно время. Оценка, вес, сложность и бонус зафиксированы."
+    },
+    {
+      "id": "d1de1b1f-e3ce-4b7f-bb28-e8ce83e7ff34",
+      "at": "2026-11-17T10:03:20.014566Z",
+      "kind": "quest_status",
+      "description": "c46d152c-fd82-4883-8215-fdd6938dcf9c: На паузе"
+    },
+    {
+      "id": "4c00e2f6-9826-4419-af28-0204bcbcc81d",
+      "at": "2026-11-17T10:03:20.014569Z",
+      "kind": "quest_status",
+      "description": "289648b5-197d-4049-9285-22c6961ad232: Отменено"
+    },
+    {
+      "id": "14a2fae0-6c4f-4b4e-ad9b-6162cd5fb93e",
+      "at": "2026-11-17T10:03:20.014585Z",
+      "kind": "session_completed",
+      "description": "Первая глава: +10.00 XP. 10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "976f9ce0-b215-4ce4-b1fe-adfb7ea2c8d3",
+      "at": "2026-11-17T10:03:20.014590Z",
+      "kind": "mastery_verified",
+      "description": "Основы: Первая глава прочитана и пересказана."
+    },
+    {
+      "id": "d9feb3d5-7e93-4a43-9d0a-2b78a385c4aa",
+      "at": "2026-11-17T10:03:20.014598Z",
+      "kind": "plan_committed",
+      "description": "2026-11-17: принято 3 обязательств"
+    },
+    {
+      "id": "e686e891-090b-4c0b-8f33-503fd2efdbe7",
+      "at": "2026-11-17T10:03:20.014615Z",
+      "kind": "plan_committed",
+      "description": "2026-11-11: принято 3 обязательств"
+    },
+    {
+      "id": "d8cda835-7c2b-434c-a6b7-f9196ce79cf9",
+      "at": "2026-11-17T10:03:20.014619Z",
+      "kind": "plan_changed",
+      "description": "2026-11-11: Не хватило вечера"
+    },
+    {
+      "id": "63c922a8-35f4-4fe4-ba08-5b98fc801e5c",
+      "at": "2026-11-17T10:03:20.014623Z",
+      "kind": "plan_changed",
+      "description": "2026-11-06: День без плана"
+    },
+    {
+      "id": "9fdb3368-9556-4084-b084-0e86cc08e9da",
+      "at": "2026-11-17T10:03:20.014633Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "313bbdfd-c086-4fb6-b775-1f437972a118",
+      "at": "2026-11-17T10:03:20.014643Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "a14c486a-7b83-4faa-9862-066ff0e2c9f9",
+      "at": "2026-11-17T10:03:20.014651Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "b407c6c0-3bdc-4f3b-ac74-24f5acbe461c",
+      "at": "2026-11-17T10:03:20.014659Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "269a8fe9-37ee-4474-96f9-dc67568a4010",
+      "at": "2026-11-17T10:03:20.014670Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "e56689f4-7ae2-4fdf-91f0-cd5b1116b8f3",
+      "at": "2026-11-17T10:03:20.014680Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "a6a47777-9a1d-4642-b464-f3dcf7b51122",
+      "at": "2026-11-17T10:03:20.014688Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "40dc2f93-a7d7-4826-8af2-11ad56c68060",
+      "at": "2026-11-17T10:03:20.014701Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "c2b97c0a-2e76-41e7-ae8a-99238bc46dd1",
+      "at": "2026-11-17T10:03:20.014709Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "7c67a211-0b13-4478-806c-040fd4c2b375",
+      "at": "2026-11-17T10:03:20.014716Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "b35c95ef-ddd0-40f7-ba2a-fd8a4e7d2546",
+      "at": "2026-11-17T10:03:20.014729Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "d97606ae-16d9-452e-95fa-ee526b0e06c9",
+      "at": "2026-11-17T10:03:20.014740Z",
+      "kind": "session_completed",
+      "description": "Читать 15 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "fdd3a971-cc1e-4a0e-821e-587860778fb8",
+      "at": "2026-11-17T10:03:20.014750Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "64b28650-6a5c-468a-8584-88ab2af67b59",
+      "at": "2026-11-17T10:03:20.014758Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "6bd30fd7-bcf1-45c7-8346-b0fe5f352835",
+      "at": "2026-11-17T10:03:20.014766Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "5210e5f4-552f-45d8-ba83-2951c54904aa",
+      "at": "2026-11-17T10:03:20.014782Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "fe71a798-0d83-450f-8702-1f9647fb30cc",
+      "at": "2026-11-17T10:03:20.014791Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "ad029f05-005e-424a-a163-e1f227c3cacc",
+      "at": "2026-11-17T10:03:20.014803Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "dc56b8d0-885d-4674-8560-5a787d4637d8",
+      "at": "2026-11-17T10:03:20.014811Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "b83ed083-3fa9-4a62-8a1f-f967df31134f",
+      "at": "2026-11-17T10:03:20.014819Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "53c20686-937d-4ec9-93f8-62e8a960de6e",
+      "at": "2026-11-17T10:03:20.014827Z",
+      "kind": "session_completed",
+      "description": "Зарядка: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "81b06f18-80e0-4fda-a1fa-5c27aef9b02e",
+      "at": "2026-11-17T10:03:20.014841Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "e4c1cab0-2a31-4d69-96b2-fc8167ff0f12",
+      "at": "2026-11-17T10:03:20.014850Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "44b296d8-e2ad-4df5-b7f7-c0e333f59834",
+      "at": "2026-11-17T10:03:20.014859Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "5c7e705a-0795-4798-a72d-d2108c146640",
+      "at": "2026-11-17T10:03:20.014867Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "b01bb799-a0db-4458-bb42-d022e4324e52",
+      "at": "2026-11-17T10:03:20.014876Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "708e02e9-799c-4917-ba00-ce1690a89e02",
+      "at": "2026-11-17T10:03:20.014885Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "258a78bc-4a51-4cb0-92cc-ad29e052abcb",
+      "at": "2026-11-17T10:03:20.014894Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "71b74bb8-6b27-4fcf-9029-fb1d10d41737",
+      "at": "2026-11-17T10:03:20.014902Z",
+      "kind": "session_completed",
+      "description": "Сон в одно время: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "f43ca0b7-9bff-42d0-adee-f0776c0ba653",
+      "at": "2026-11-17T10:03:20.014911Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "d8f1f062-afda-44f6-8402-2ac15664f686",
+      "at": "2026-11-17T10:03:20.014920Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "87d5b546-4321-4505-aeb8-02523deb0547",
+      "at": "2026-11-17T10:03:20.014938Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "f773c4a2-8337-4ee5-86ac-7d67eba22869",
+      "at": "2026-11-17T10:03:20.014948Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "0cbed198-98e6-4bba-bfe4-0bbd44992d25",
+      "at": "2026-11-17T10:03:20.014957Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "99498e9e-318f-439f-beac-ae319368e23b",
+      "at": "2026-11-17T10:03:20.014966Z",
+      "kind": "session_completed",
+      "description": "Разговор 10 минут: +1.00 XP. Поддерживающее действие: 1.0 XP. Общий предел всех привычек — 4 XP/день, одна отметка привычки в день."
+    },
+    {
+      "id": "86ec009f-68e6-4308-8e02-ea17900fcaba",
+      "at": "2026-11-17T10:03:20.014974Z",
+      "kind": "session_completed",
+      "description": "Все времена: +10.00 XP. 10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "fb6483e8-9c31-4857-b5b1-7c1fce488e98",
+      "at": "2026-11-17T10:03:20.014982Z",
+      "kind": "session_completed",
+      "description": "Все времена: +10.00 XP. 10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "a448cb45-3998-49ff-a00a-e815096d3cf5",
+      "at": "2026-11-17T10:03:20.014990Z",
+      "kind": "session_completed",
+      "description": "Все времена: +10.00 XP. 10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "03bdf0a6-805c-4b5f-a2e0-9fbea5ae79dc",
+      "at": "2026-11-17T10:03:20.014997Z",
+      "kind": "session_completed",
+      "description": "Все времена: +10.00 XP. 10 × 25.00/25 × 1.0 × 1.000 = 10.00 XP. Учтено 25.00 из 25.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "74bb68c4-b588-494f-ae8c-1afe7a6d33a3",
+      "at": "2026-11-17T10:03:20.015007Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "595d0a24-6b60-49f2-82af-3ece41565602",
+      "at": "2026-11-17T10:03:20.015016Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "655dfd77-a471-4b84-b171-cd58814c663c",
+      "at": "2026-11-17T10:03:20.015025Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "98f761af-c960-4539-8e56-33c461f3a448",
+      "at": "2026-11-17T10:03:20.015035Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "655939ae-2529-4afc-9cad-45c2f0d7280d",
+      "at": "2026-11-17T10:03:20.015043Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "ab01177a-cade-42e9-92b6-f67c45f641ec",
+      "at": "2026-11-17T10:03:20.015052Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "04c422be-98d8-49fd-90b0-1a71a989e054",
+      "at": "2026-11-17T10:03:20.015060Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "ed049f0c-9e18-4dfc-95a2-dfd05e6d9026",
+      "at": "2026-11-17T10:03:20.015073Z",
+      "kind": "session_completed",
+      "description": "Танебаум: +27.00 XP. 10 × 45.00/25 × 1.5 × 1.000 = 27.00 XP. Учтено 45.00 из 45.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "88ad1124-42c6-482b-a20b-a4c4e54809fe",
+      "at": "2026-11-17T10:03:20.015082Z",
+      "kind": "session_completed",
+      "description": "Короткий рассказ: +12.00 XP. 10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "37170704-d5e3-47de-8f9b-672624662d62",
+      "at": "2026-11-17T10:03:20.015090Z",
+      "kind": "session_completed",
+      "description": "Короткий рассказ: +12.00 XP. 10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "5d22f45c-de1c-4cd6-9be7-aa042dc2c104",
+      "at": "2026-11-17T10:03:20.015101Z",
+      "kind": "session_completed",
+      "description": "Короткий рассказ: +20.00 XP. 10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25. + 8.00 XP: бонус этапа, не выше XP практики по этому этапу."
+    },
+    {
+      "id": "9e043ac0-72f6-4c89-817b-184172059bdb",
+      "at": "2026-11-17T10:03:20.015115Z",
+      "kind": "session_completed",
+      "description": "Пересказ главы: +12.00 XP. 10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "288699d0-dc16-4d8f-9ee1-c3d8bd7ffac0",
+      "at": "2026-11-17T10:03:20.015130Z",
+      "kind": "session_completed",
+      "description": "Пересказ главы: +12.00 XP. 10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "6b3c70b3-d28a-43fc-9ce7-7f8c266d99b2",
+      "at": "2026-11-17T10:03:20.015139Z",
+      "kind": "session_completed",
+      "description": "Пересказ главы: +12.00 XP. 10 × 20.00/25 × 1.5 × 1.000 = 12.00 XP. Учтено 20.00 из 20.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "4c3bc9d5-072b-406d-a520-9e4067cd035d",
+      "at": "2026-11-17T10:03:20.015148Z",
+      "kind": "session_completed",
+      "description": "Разобрать неделю: +12.00 XP. 10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "71ca7521-366b-432b-a856-e5d33efcd289",
+      "at": "2026-11-17T10:03:20.015159Z",
+      "kind": "session_completed",
+      "description": "Разобрать неделю: +12.00 XP. 10 × 30.00/25 × 1.0 × 1.000 = 12.00 XP. Учтено 30.00 из 30.00 мин (лимит 125% оценки). R: 1 до 180 мин/день, 0,5 до 300, затем 0,25."
+    },
+    {
+      "id": "b119a69e-a7d5-4488-9a51-464143ce8cd4",
+      "at": "2026-11-17T10:03:20.015162Z",
+      "kind": "quest_missed",
+      "description": "Глава к сроку: срок истёк"
+    },
+    {
+      "id": "5b88aa42-85fe-4db0-9c8f-925013fe347d",
+      "at": "2026-11-17T10:03:20.015194Z",
+      "kind": "routine_updated",
+      "description": "Рутина обновлена с 2026-10-28"
+    },
+    {
+      "id": "b8430d89-378b-45bc-bc03-d330319da0c3",
+      "at": "2026-11-17T10:03:20.015251Z",
+      "kind": "target_set",
+      "description": "Неделя 2026-11-16: 180 мин для Английский"
+    },
+    {
+      "id": "39b4c569-1052-43e7-a9ff-cc9d9a96a10a",
+      "at": "2026-11-17T10:03:20.015256Z",
+      "kind": "target_set",
+      "description": "Неделя 2026-11-16: 4 занятий для Тело"
+    }
+  ],
+  "active": null,
+  "routine_versions": [
+    {
+      "effective_from": "2026-10-28",
+      "enabled": true,
+      "items": [
+        {
+          "id": "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+          "title": "Вода"
+        },
+        {
+          "id": "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+          "title": "Зарядка"
+        },
+        {
+          "id": "e4630ae6-4e32-4008-9444-61840abb7a36",
+          "title": "Чтение"
+        },
+        {
+          "id": "da80567c-138a-48fc-b175-6f8d27ded9a1",
+          "title": "Сон"
+        },
+        {
+          "id": "c5298b27-0365-4271-af79-d167c1a45cd1",
+          "title": "Разобрать стол"
+        },
+        {
+          "id": "d7fb86f5-8ca9-4479-b083-90d740d4a3f5",
+          "title": "Час без телефона"
+        }
+      ]
+    }
+  ],
+  "routine_days": [
+    {
+      "day": "2026-11-03",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-04",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "c5298b27-0365-4271-af79-d167c1a45cd1"
+      ]
+    },
+    {
+      "day": "2026-11-05",
+      "completed": [
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "c5298b27-0365-4271-af79-d167c1a45cd1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-06",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-07",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "c5298b27-0365-4271-af79-d167c1a45cd1"
+      ]
+    },
+    {
+      "day": "2026-11-08",
+      "completed": [
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "c5298b27-0365-4271-af79-d167c1a45cd1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-09",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-10",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "c5298b27-0365-4271-af79-d167c1a45cd1"
+      ]
+    },
+    {
+      "day": "2026-11-11",
+      "completed": [
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "c5298b27-0365-4271-af79-d167c1a45cd1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-12",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-13",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "c5298b27-0365-4271-af79-d167c1a45cd1"
+      ]
+    },
+    {
+      "day": "2026-11-14",
+      "completed": [
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "c5298b27-0365-4271-af79-d167c1a45cd1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-15",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "e4630ae6-4e32-4008-9444-61840abb7a36",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "d7fb86f5-8ca9-4479-b083-90d740d4a3f5"
+      ]
+    },
+    {
+      "day": "2026-11-16",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239",
+        "da80567c-138a-48fc-b175-6f8d27ded9a1",
+        "c5298b27-0365-4271-af79-d167c1a45cd1"
+      ]
+    },
+    {
+      "day": "2026-11-17",
+      "completed": [
+        "2ded1038-f0bb-4ad0-9b08-4393ad205ee8",
+        "2bed70b6-d5d5-4f04-bad0-2e09790c1239"
+      ]
+    }
+  ]
+}
