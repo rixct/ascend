@@ -171,7 +171,9 @@ enum FocusBrowser {
     observer = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
     ) { [weak self] _ in
-      MainActor.assumeIsolated { self?.onActivate?() }
+      // assumeIsolated traps with SIGTRAP when AppKit's main queue is not the Swift
+      // main actor, which is what happens in the headless CI process.
+      Task { @MainActor in self?.onActivate?() }
     }
   }
   func stop() {

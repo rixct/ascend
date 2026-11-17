@@ -9,6 +9,22 @@ private final class WeakReference<T: AnyObject> {
 }
 
 @main struct StabilityTests {
+  static func main() {
+    // AppKit calls in this process must see a real main run loop. Without it, CI's
+    // macOS runner hits a libdispatch queue check and the test dies with SIGTRAP.
+    NSApplication.shared.setActivationPolicy(.prohibited)
+    Task { @MainActor in
+      do {
+        try await run()
+        fflush(stdout)
+        exit(0)
+      } catch {
+        fputs("StabilityTests failed: \(error)\n", stderr)
+        exit(1)
+      }
+    }
+    NSApplication.shared.run()
+  }
   @MainActor static func request(_ engine: EngineProcess, _ payload: [String: Any]) async -> Result<
     Response, Error
   > {
@@ -16,7 +32,7 @@ private final class WeakReference<T: AnyObject> {
       engine.send(payload) { continuation.resume(returning: $0) }
     }
   }
-  @MainActor static func main() async throws {
+  @MainActor static func run() async throws {
     let args = CommandLine.arguments
     let python = URL(fileURLWithPath: args[1])
     let fixture = args[2]

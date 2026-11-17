@@ -10,6 +10,7 @@ final class EngineProcess: @unchecked Sendable {
   private let output = Pipe()
   private let lock = NSLock()
   private var stopped = false
+  private var closed = false
   private var buffer = Data()
   private let timeout: TimeInterval
   private let maxResponseBytes: Int
@@ -141,27 +142,37 @@ final class EngineProcess: @unchecked Sendable {
   }
   func shutdown() {
     lock.lock()
-    guard !stopped else {
-      lock.unlock()
-      return
-    }
+    let first = !stopped
     stopped = true
     lock.unlock()
+    guard first else { return }
     // Never close an FD underneath poll/read/write: finish the current exchange first.
-    queue.async { [self] in
-      buffer = Data()
-      try? input.fileHandleForWriting.close()
-      try? output.fileHandleForReading.close()
-      let child = process
-      DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-        if child.isRunning { child.terminate() }
-      }
-      DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-        if child.isRunning { _ = Darwin.kill(child.processIdentifier, SIGKILL) }
-      }
+    queue.async { [self] in self.closeResources() }
+  }
+  private func closeResources() {
+    lock.lock()
+    let shouldClose = !closed
+    closed = true
+    lock.unlock()
+    guard shouldClose else { return }
+    buffer.removeAll()
+    try? input.fileHandleForWriting.close()
+    try? output.fileHandleForReading.close()
+    let child = process
+    DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+      if child.isRunning { child.terminate() }
+    }
+    DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+      if child.isRunning { _ = Darwin.kill(child.processIdentifier, SIGKILL) }
     }
   }
   deinit {
+    lock.lock()
+    stopped = true
+    let shouldClose = !closed
+    closed = true
+    lock.unlock()
+    guard shouldClose else { return }
     try? input.fileHandleForWriting.close()
     try? output.fileHandleForReading.close()
     if process.isRunning { process.terminate() }
