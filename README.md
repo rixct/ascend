@@ -1,72 +1,72 @@
-<h1><img src="docs/logo.png" alt="" width="56"> ASCEND</h1>
+<h1><img src="docs/logo.png" alt="" width="32" height="32" align="absmiddle"> ASCEND</h1>
 
-Локальная система развития для macOS. Квесты, привычки, сессии и навыки хранятся на этом компьютере. Аккаунт, сервер и подписка не нужны.
+A local personal-development app for macOS. Quests, habits, sessions, and skills stay on this computer. No account, server, or subscription.
 
-Интерфейс на русском и английском. Сборка для Apple Silicon, macOS 13 и новее.
+The interface is in English and Russian. The build is for Apple Silicon and macOS 13 or later.
 
-## Что делает
+## What it does
 
-**Сегодня** собирает день в одном месте. Сначала идут привычки на каждый день, затем задачи «пока не закончено», затем один шаг длинного проекта. Рядом — ежедневная рутина: список составляется заранее, отметки живут только этот день.
+**Today** puts the day in one place. Habits come first, then work that continues until it is done, then the next step of a longer project. The daily routine sits beside that: the list is set in advance, and the checks last only for today.
 
-**Навыки** связаны зависимостями и копят опыт. У навыка есть свои квесты. Сессия идёт по таймеру и записывается в историю; после выхода или сбоя она возвращается на паузе, время вне приложения не начисляется.
+**Skills** are linked by prerequisites and collect experience. Each skill has its own quests. A session runs on a timer and is written into the history. After you quit or the app stops, the session comes back paused. Time spent outside the app is not counted.
 
-**Квесты** бывают трёх видов: «Каждый день», «Пока не закончено» и «Один шаг». У задачи есть план сессий, срок и результат.
+**Quests** are one of three kinds: every day, until it is done, or one step. A quest can have a session plan, a deadline, and a result.
 
-**Персонаж** показывает уровень, опыт и шесть характеристик. Седьмая, дисциплина, стоит числом рядом с ними. Этапы открываются отдельной кнопкой.
+**Character** shows level, experience, and six attributes. Discipline, the seventh, is a number beside them. Milestones open from their own button.
 
-Данные лежат в `~/Library/Application Support/ASCEND/`. База — SQLite. Резервные копии, JSON и CSV есть в настройках. Импорт сначала показывает, что внутри файла, и перед заменой сохраняет текущую базу. Сеть не используется.
+Data lives in `~/Library/Application Support/ASCEND/`. The database is SQLite. Backups, JSON, and CSV are in Settings. Import shows what a file contains, and the current database is copied before it is replaced. The app does not use the network.
 
-## Снимки
+## Screenshots
 
-Сегодня: практика дня и рутина.
+A new profile, before any skills or quests.
 
-<img src="docs/screenshots/today.png" width="880" alt="Экран Сегодня: практика и ежедневная рутина">
+Today.
 
-Навыки: опыт, зависимости и подтверждённый результат.
+<img src="docs/screenshots/today.png" width="880" alt="Today, with nothing to practice yet">
 
-<img src="docs/screenshots/skills.png" width="880" alt="Экран Навыки: список навыков и карточка Основы">
+Skills.
 
-Квесты: список, срок и запуск сессии.
+<img src="docs/screenshots/skills.png" width="880" alt="Skills, before any skill has been added">
 
-<img src="docs/screenshots/quests.png" width="880" alt="Экран Квесты: список и карточка выбранного квеста">
+Quests.
 
-На снимках тестовый профиль. Свой профиль при первом запуске пустой.
+<img src="docs/screenshots/quests.png" width="880" alt="Quests, before any quest has been added">
 
-## Запуск
+## Run
 
-Готовая сборка: [ASCEND 0.6.0 для Apple Silicon](https://github.com/rixct/ascend/releases/tag/v0.6.0). Файл подписан локально, поэтому при первом открытии macOS попросит подтвердить запуск.
+Download [ASCEND 0.6.0 for Apple Silicon](https://github.com/rixct/ascend/releases/tag/v0.6.0). The app is signed locally, so macOS asks you to confirm the first launch.
 
-Сборка из исходников:
+Build from source:
 
 ```sh
 ./scripts/build-app.sh
 open dist/ASCEND.app
 ```
 
-Нужны Xcode Command Line Tools и Rust stable. Если Cargo ещё нет, `scripts/setup.sh` ставит его в `.toolchain/`. Каталоги `target/`, `dist/` и `.toolchain/` остаются на машине.
+You need the Xcode Command Line Tools and Rust stable. If Cargo is not installed, `scripts/setup.sh` puts it in `.toolchain/`. The `target/`, `dist/`, and `.toolchain/` directories stay on your machine.
 
-Отдельная база, чтобы не открывать свой профиль:
+Open a separate database instead of your own profile:
 
 ```sh
 open -n dist/ASCEND.app --args --data-dir /absolute/path/to/test-profile
 ```
 
-## Устройство
+## Layout
 
-| Путь | Назначение |
+| Path | Role |
 | --- | --- |
-| `native/Sources/` | SwiftUI и AppKit: окна, экраны, настройки |
-| `native/Resources/` | Русские и английские строки |
-| `crates/ascend-core/` | Опыт, уровни, дисциплина, баланс |
-| `crates/ascend-storage/` | SQLite, копии, JSON и CSV |
-| `crates/ascend-planner/` | План дня и рекомендации |
-| `crates/ascend-bridge/` | Локальный процесс, с которым говорит интерфейс |
+| `native/Sources/` | SwiftUI and AppKit: windows, screens, settings |
+| `native/Resources/` | English and Russian strings |
+| `crates/ascend-core/` | Experience, levels, discipline, balance |
+| `crates/ascend-storage/` | SQLite, backups, JSON and CSV |
+| `crates/ascend-planner/` | The daily plan and recommendations |
+| `crates/ascend-bridge/` | The local process the interface talks to |
 
-Интерфейс не считает опыт сам. Все команды идут в `ascend-engine` через stdin/stdout и проходят одну и ту же проверку.
+The interface does not calculate experience itself. Every command goes to `ascend-engine` through stdin/stdout and through the same checks.
 
-Подробнее: [рутина](docs/ROUTINE.md), [сессии](docs/SESSIONS.md), [дерево навыков](docs/SKILL_TREE.md), [дерево квестов](docs/QUEST_TREES.md), [строгий режим](docs/STRICT_MODE.md), [уведомления](docs/NOTIFICATIONS.md).
+More detail: [routine](docs/ROUTINE.md), [sessions](docs/SESSIONS.md), [skill tree](docs/SKILL_TREE.md), [quest trees](docs/QUEST_TREES.md), [strict mode](docs/STRICT_MODE.md), [notifications](docs/NOTIFICATIONS.md).
 
-Проверки:
+Checks:
 
 ```sh
 ./scripts/cargo.sh test --workspace --locked
@@ -74,6 +74,6 @@ open -n dist/ASCEND.app --args --data-dir /absolute/path/to/test-profile
 ./scripts/cargo.sh fmt --all --check
 ```
 
-106 тестов Rust покрывают формулы, повторные начисления, привычки, зависимости и SQLite. Те же проверки запускает GitHub Actions.
+106 Rust tests cover the formulas, repeated awards, habits, prerequisites, and SQLite. GitHub Actions runs the same checks.
 
-Лицензия — [MIT](LICENSE).
+License: [MIT](LICENSE).
