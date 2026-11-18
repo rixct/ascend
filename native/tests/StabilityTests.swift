@@ -135,13 +135,18 @@ private final class WeakReference<T: AnyObject> {
       if importConfirmed { break }
       try await Task.sleep(nanoseconds: 20_000_000)
     }
+    require(importConfirmed, "Import confirmation did not reach the engine")
     let importLog = try String(contentsOf: log)
     require(
       !importLog.contains("cancel_import"), "Dismissal cancelled Replace before its action")
     store?.cancelImport()
-    try await Task.sleep(nanoseconds: 100_000_000)
-    let cancelledLog = try String(contentsOf: log)
-    require(cancelledLog.contains("cancel_import"), "Explicit cancel did not reach the engine")
+    var cancelDelivered = false
+    for _ in 0..<500 {
+      cancelDelivered = try String(contentsOf: log).contains("cancel_import")
+      if cancelDelivered { break }
+      try await Task.sleep(nanoseconds: 20_000_000)
+    }
+    require(cancelDelivered, "Explicit cancel did not reach the engine")
     store?.skillSelection = ["one", "two", "three"]
     store?.deleteSelectedSkills()
     for _ in 0..<500 {
