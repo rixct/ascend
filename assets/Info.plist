@@ -22,9 +22,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.0</string>
+	<string>0.7.0</string>
 	<key>CFBundleVersion</key>
-	<string>16</string>
+	<string>17</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>NSHighResolutionCapable</key>
@@ -35,5 +35,7 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>ASCEND uses the camera to count focus time only while you are present. Video is processed on this Mac and is not recorded.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>ASCEND checks the active browser tab to apply your website rules to the focus timer.</string>
 </dict>
 </plist>

@@ -84,8 +84,13 @@ struct TimerView: View {
             symbol: active.isCounting
               ? "circle.fill" : (active.focus_confirmed == false ? "hourglass" : "pause.fill"))
           if active.running && active.focus_confirmed == false {
+            let skill = state.quest(active.quest_id).flatMap { quest in
+              state.skills.first { $0.id == quest.skill_id }
+            }
             HintButton(
-              text: "Open an allowed app or site to keep the timer going. This window always counts.")
+              text: skill?.focusListMode == .exceptListed
+                ? "Switch to an app or tab outside the list to resume counting. If the tab cannot be checked, allow browser access in macOS Automation settings."
+                : "Open an allowed app or site to keep the timer going. This window always counts.")
           }
           Spacer()
           Text(state.quest(active.quest_id).map { state.skill($0.skill_id) } ?? "").font(
@@ -681,11 +686,7 @@ struct SkillsView: View {
                       systemImage: "arrow.turn.down.right"
                     ).font(.system(size: 12)).foregroundStyle(Color.secondary)
                   }
-                  Text(
-                    skill.restrictsFocus
-                      ? L("Timer runs in %@.", FocusList.summary(skill))
-                      : L("Timer runs in any app.")
-                  )
+                  Text(FocusList.summary(skill))
                   .font(.system(size: 12)).foregroundStyle(Color.secondary).fixedSize(
                     horizontal: false, vertical: true)
                   HStack(spacing: 8) {

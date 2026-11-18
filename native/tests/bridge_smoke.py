@@ -103,8 +103,52 @@ def main():
         engine = Engine(Path(directory))
         empty = engine.ok("onboard", name="Пустой", minutes=30, starter=False)["state"]
         assert empty["settings"]["onboarded"] and not empty["skills"]
+        rules = dict(title="Focus filters", domain="Mind", prerequisites=[],
+                     excluded_apps=["com.apple.TV"], excluded_sites=["https://www.example.com/video"])
+        skill = engine.ok("create_skill", focus_list_mode="except_listed", **rules)["state"]["skills"][0]
+        assert skill["focus_list_mode"] == "except_listed"
+        assert skill["excluded_apps"] == ["com.apple.TV"] and skill["excluded_sites"] == ["example.com"]
+        assert not skill["allowed_apps"] and not skill["allowed_sites"]
+        quest = engine.ok("create_quest", title="Focus", outcome="Rules applied", skill_id=skill["id"],
+                          kind="Daily", priority=2, minutes=25, difficulty=1.0,
+                          bonus=0, deadline=None, dependencies=[])["state"]["quests"][0]["id"]
+        engine.ok("start", id=quest)
+
+        def counts(bundle_id, **site):
+            return engine.ok("focus", bundle_id=bundle_id, **site)["timer"]["active"]["focus_confirmed"]
+
+        assert not counts("com.apple.TV")
+        assert not counts("com.apple.Safari", host="video.example.com")
+        assert not counts("com.apple.Safari", site_unavailable=True)
+        assert counts("com.apple.Safari", host="example.org")
+        assert counts("com.apple.TextEdit")
+        assert counts("dev.ascend.desktop")
+        updated = engine.ok("update_skill", id=skill["id"], focus_list_mode="except_listed", **rules)
+        assert updated["state"]["skills"][0] == skill
+        backup = Path(directory) / "focus-rules.json"
+        engine.ok("export", path=str(backup), csv=False)
         engine.close()
-    print("Native bridge OK: validation, plan, timer recovery, result, idempotency, JSON/CSV, restart, avatar, legacy profiles, delete skill, empty start")
+
+        engine = Engine(Path(directory))
+        assert engine.ok("load")["state"]["skills"][0] == skill
+        engine.ok("preview_import", path=str(backup))
+        assert engine.ok("confirm_import")["state"]["skills"][0] == skill
+        old_profile = json.loads(backup.read_text())
+        old_skill = old_profile["skills"][0]
+        old_skill["allowed_apps"] = old_skill.pop("excluded_apps")
+        old_skill["allowed_sites"] = old_skill.pop("excluded_sites")
+        backup.write_text(json.dumps(old_profile))
+        engine.ok("preview_import", path=str(backup))
+        assert engine.ok("confirm_import")["state"]["skills"][0] == skill
+        old_skill.pop("focus_list_mode")
+        backup.write_text(json.dumps(old_profile))
+        engine.ok("preview_import", path=str(backup))
+        restored_skill = engine.ok("confirm_import")["state"]["skills"][0]
+        assert restored_skill["focus_list_mode"] == "only_listed"
+        assert restored_skill["allowed_apps"] == skill["excluded_apps"]
+        assert restored_skill["allowed_sites"] == skill["excluded_sites"]
+        engine.close()
+    print("Native bridge OK: validation, plan, timer recovery, result, idempotency, JSON/CSV, restart, avatar, legacy profiles, delete skill, empty start, focus filters")
 
 
 if __name__ == "__main__":

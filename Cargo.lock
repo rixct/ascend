@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "ascend-bridge"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "ascend-core",
  "ascend-planner",
@@ -25,7 +25,7 @@ dependencies = [
 
 [[package]]
 name = "ascend-core"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "chrono",
  "serde",
@@ -36,7 +36,7 @@ dependencies = [
 
 [[package]]
 name = "ascend-planner"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "ascend-core",
  "chrono",
@@ -44,7 +44,7 @@ dependencies = [
 
 [[package]]
 name = "ascend-storage"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "ascend-core",
  "chrono",

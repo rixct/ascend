@@ -46,12 +46,73 @@ pub struct Skill {
     pub mastery: u8,
     pub evidence: Vec<String>,
     pub prerequisites: Vec<Id>,
-    /// Bundle identifiers. Empty, together with sites, means the timer is not limited.
-    #[serde(default)]
-    pub allowed_apps: Vec<String>,
-    /// Hostnames such as `github.com`. A subdomain of a listed site also counts.
-    #[serde(default)]
-    pub allowed_sites: Vec<String>,
+    #[serde(flatten)]
+    pub focus_rules: FocusRules,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FocusListMode {
+    #[default]
+    OnlyListed,
+    ExceptListed,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(from = "StoredFocusRules", into = "StoredFocusRules")]
+pub struct FocusRules {
+    pub mode: FocusListMode,
+    /// Bundle identifiers.
+    pub apps: Vec<String>,
+    /// Domains. Subdomains also match.
+    pub sites: Vec<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
+struct StoredFocusRules {
+    focus_list_mode: FocusListMode,
+    allowed_apps: Vec<String>,
+    allowed_sites: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    excluded_apps: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    excluded_sites: Option<Vec<String>>,
+}
+
+impl From<StoredFocusRules> for FocusRules {
+    fn from(stored: StoredFocusRules) -> Self {
+        let mode = stored.focus_list_mode;
+        let (apps, sites) = match mode {
+            FocusListMode::OnlyListed => (stored.allowed_apps, stored.allowed_sites),
+            FocusListMode::ExceptListed => (
+                stored.excluded_apps.unwrap_or(stored.allowed_apps),
+                stored.excluded_sites.unwrap_or(stored.allowed_sites),
+            ),
+        };
+        Self { mode, apps, sites }
+    }
+}
+
+impl From<FocusRules> for StoredFocusRules {
+    fn from(rules: FocusRules) -> Self {
+        let mut stored = Self {
+            focus_list_mode: rules.mode,
+            ..Self::default()
+        };
+        // Older releases ignore the exclusion fields and see an unrestricted timer.
+        match rules.mode {
+            FocusListMode::OnlyListed => {
+                stored.allowed_apps = rules.apps;
+                stored.allowed_sites = rules.sites;
+            }
+            FocusListMode::ExceptListed => {
+                stored.excluded_apps = Some(rules.apps);
+                stored.excluded_sites = Some(rules.sites);
+            }
+        }
+        stored
+    }
 }
 const FOCUS_LIMIT: usize = 24;
 fn default_focus_confirmed() -> bool {
@@ -118,7 +179,7 @@ fn normalize_bundle(raw: &str) -> Option<String> {
     Some(text.to_string())
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
-#[error("Invalid app or website allowlist")]
+#[error("Invalid app or website focus list")]
 pub struct InvalidFocusList;
 
 pub fn normalize_focus_lists(
@@ -144,28 +205,39 @@ pub fn normalize_focus_lists(
     }
     Ok((allowed_apps, allowed_sites))
 }
-impl Skill {
-    pub fn restricts_focus(&self) -> bool {
-        !self.allowed_apps.is_empty() || !self.allowed_sites.is_empty()
+impl FocusRules {
+    pub fn normalized(mut self) -> Result<Self, InvalidFocusList> {
+        (self.apps, self.sites) = normalize_focus_lists(self.apps, self.sites)?;
+        Ok(self)
     }
-    /// An empty list allows every app. Otherwise the front app or the active tab's site must match.
-    /// ASCEND itself always counts, so looking at the timer does not stop it.
-    pub fn allows_focus(&self, bundle_id: &str, host: Option<&str>) -> bool {
-        if !self.restricts_focus() || bundle_id.trim() == "dev.ascend.desktop" {
+    pub fn restricts_focus(&self) -> bool {
+        !self.apps.is_empty() || !self.sites.is_empty()
+    }
+    pub fn allows_focus(
+        &self,
+        bundle_id: &str,
+        host: Option<&str>,
+        site_unavailable: bool,
+    ) -> bool {
+        let bundle_id = bundle_id.trim();
+        if !self.restricts_focus() || bundle_id == "dev.ascend.desktop" {
             return true;
         }
-        if self.allowed_apps.iter().any(|id| id == bundle_id.trim()) {
-            return true;
+        let listed = self.apps.iter().any(|id| id == bundle_id)
+            || host.and_then(normalize_site).is_some_and(|host| {
+                self.sites.iter().any(|site| {
+                    host == *site
+                        || host
+                            .strip_suffix(site.as_str())
+                            .is_some_and(|prefix| prefix.ends_with('.'))
+                })
+            });
+        match self.mode {
+            FocusListMode::OnlyListed => listed,
+            FocusListMode::ExceptListed => {
+                !listed && !bundle_id.is_empty() && (self.sites.is_empty() || !site_unavailable)
+            }
         }
-        let Some(host) = host.and_then(normalize_site) else {
-            return false;
-        };
-        self.allowed_sites.iter().any(|site| {
-            host == *site
-                || host
-                    .strip_suffix(site.as_str())
-                    .is_some_and(|prefix| prefix.ends_with('.'))
-        })
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -479,19 +551,29 @@ impl GameState {
             .iter()
             .any(|s| s.id == q.skill_id && self.skill_unlocked(s))
     }
-    pub fn focus_allows(&self, quest_id: Id, bundle_id: &str, host: Option<&str>) -> bool {
+    pub fn focus_allows(
+        &self,
+        quest_id: Id,
+        bundle_id: &str,
+        host: Option<&str>,
+        site_unavailable: bool,
+    ) -> bool {
         self.quests
             .iter()
             .find(|quest| quest.id == quest_id)
             .and_then(|quest| self.skills.iter().find(|skill| skill.id == quest.skill_id))
-            .is_some_and(|skill| skill.allows_focus(bundle_id, host))
+            .is_some_and(|skill| {
+                skill
+                    .focus_rules
+                    .allows_focus(bundle_id, host, site_unavailable)
+            })
     }
     pub fn restricts_focus(&self, quest_id: Id) -> bool {
         self.quests
             .iter()
             .find(|quest| quest.id == quest_id)
             .and_then(|quest| self.skills.iter().find(|skill| skill.id == quest.skill_id))
-            .is_some_and(|skill| skill.restricts_focus())
+            .is_some_and(|skill| skill.focus_rules.restricts_focus())
     }
     /// A deadline that has passed closes the quest as missed. The active session is left alone
     /// so a sitting already underway can still be saved.
@@ -525,8 +607,7 @@ impl GameState {
             mastery: 0,
             evidence: vec![],
             prerequisites,
-            allowed_apps: vec![],
-            allowed_sites: vec![],
+            focus_rules: FocusRules::default(),
         });
         id
     }

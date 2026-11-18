@@ -515,18 +515,22 @@ struct SkillForm: View {
   @State private var title = ""
   @State private var domain = "Mind"
   @State private var dependency = ""
+  @State private var focusMode = FocusListMode.onlyListed
   @State private var apps: [String] = []
   @State private var sites: [String] = []
   @State private var site = ""
-  @State private var listMessage = ""
+  @State private var appError = false
+  @State private var siteError = false
   private var editing: Skill? { store.state?.skills.first { $0.id == skillID } }
+  private var siteDraftIsEmpty: Bool { site.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
   var body: some View {
     let _ = locale
     SheetShell(
       title: skillID == nil ? "New skill" : "Edit skill",
       actionTitle: skillID == nil ? "Create" : "Save",
-      valid: !title.trimmingCharacters(in: .whitespaces).isEmpty, height: 400,
+      valid: !title.trimmingCharacters(in: .whitespaces).isEmpty, height: 450,
       save: {
+        guard siteDraftIsEmpty || addSite() else { return }
         var prerequisites = PrimaryDependency.updating(
           editing?.prerequisites ?? [], selected: dependency)
         if let skillID { prerequisites.removeAll { $0 == skillID } }
@@ -534,55 +538,78 @@ struct SkillForm: View {
         var values: [String: Any] = [
           "title": storedTitle, "domain": domain,
           "prerequisites": prerequisites,
-          "allowed_apps": apps, "allowed_sites": sites,
+          "focus_list_mode": focusMode.rawValue,
+          focusMode == .exceptListed ? "excluded_apps" : "allowed_apps": apps,
+          focusMode == .exceptListed ? "excluded_sites" : "allowed_sites": sites,
         ]
         if let skillID { values["id"] = skillID }
         store.send(skillID == nil ? "create_skill" : "update_skill", values) { store.sheet = nil }
       }
     ) {
-      TextField("Title", text: $title)
-      Picker("Category", selection: $domain) {
-        Text("Learning").tag("Mind")
-        Text("Physical fitness").tag("Body")
-        Text("Organization").tag("Organization")
-        Text("Social").tag("Social")
-        Text("Recovery").tag("Recovery")
-      }
-      Picker("Prerequisite", selection: $dependency) {
-        Text("None").tag("")
-        ForEach((store.state?.skills ?? []).filter { $0.id != skillID }) {
-          Text($0.displayTitle).tag($0.id)
+      Section {
+        TextField("Title", text: $title)
+        Picker("Category", selection: $domain) {
+          Text("Learning").tag("Mind")
+          Text("Physical fitness").tag("Body")
+          Text("Organization").tag("Organization")
+          Text("Social").tag("Social")
+          Text("Recovery").tag("Recovery")
+        }
+        Picker("Prerequisite", selection: $dependency) {
+          Text("None").tag("")
+          ForEach((store.state?.skills ?? []).filter { $0.id != skillID }) {
+            Text($0.displayTitle).tag($0.id)
+          }
         }
       }
-      HStack(spacing: 5) {
-        Text("Allowed apps and sites")
-        HintButton(
-          text: "The timer counts while one of these is the front window. ASCEND itself always counts. A website counts when its tab is active. Leave both empty to count every app."
-        )
-      }
-      ForEach(apps, id: \.self) { bundle in
-        focusChip(FocusList.applicationName(bundle)) { apps.removeAll { $0 == bundle } }
-      }
-      Button("Add application…") {
-        guard let chosen = FocusList.chooseApplication() else {
-          listMessage = "This application has no bundle identifier."
-          return
+      Section {
+        VStack(alignment: .leading, spacing: 8) {
+          Picker("Timer rules", selection: $focusMode) {
+            Text("Only listed").tag(FocusListMode.onlyListed)
+            Text("Everything except listed").tag(FocusListMode.exceptListed)
+          }
+          .labelsHidden().pickerStyle(.segmented)
+          Text(focusExplanation)
+            .font(.system(size: 12)).foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+          if apps.isEmpty && sites.isEmpty {
+            Text("An empty list lets the timer run anywhere.")
+              .font(.system(size: 12)).foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
         }
-        listMessage = ""
-        if !apps.contains(chosen.bundle) { apps.append(chosen.bundle) }
-      }
-      .disabled(apps.count >= FocusList.limit)
-      ForEach(sites, id: \.self) { host in
-        focusChip(host) { sites.removeAll { $0 == host } }
-      }
-      HStack {
-        TextField("Add a website", text: $site)
-          .onSubmit { addSite() }
-        Button("Add") { addSite() }.disabled(sites.count >= FocusList.limit)
-      }
-      if !listMessage.isEmpty {
-        Text(LocalizedStringKey(listMessage)).font(.system(size: 11)).foregroundStyle(AppStyle.amber)
-          .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 4)
+        Button(action: addApplication) {
+          Label("Add application…", systemImage: "plus")
+        }
+        .disabled(apps.count >= FocusList.limit)
+        if appError { focusError("This application has no bundle identifier.") }
+        HStack {
+          TextField("Add a website", text: $site, prompt: Text("Website domain"))
+            .labelsHidden().textFieldStyle(.roundedBorder)
+            .disabled(sites.count >= FocusList.limit)
+            .onChange(of: site) { _ in siteError = false }
+            .onSubmit { _ = addSite() }
+            .submitScope()
+          Button("Add") { _ = addSite() }
+            .disabled(siteDraftIsEmpty || sites.count >= FocusList.limit)
+        }
+        if siteError { focusError("Enter a domain such as github.com.") }
+        ForEach(apps, id: \.self) { bundle in
+          focusEntry(FocusList.applicationName(bundle), symbol: "app") {
+            apps.removeAll { $0 == bundle }
+          }
+        }
+        ForEach(sites, id: \.self) { host in
+          focusEntry(host, symbol: "globe") { sites.removeAll { $0 == host } }
+        }
+      } header: {
+        HStack(spacing: 5) {
+          Text("Timer rules")
+          HintButton(
+            text: "ASCEND always counts. Website rules check the active tab in supported browsers. In exclusion mode the timer waits for that check, which may require macOS Automation permission."
+          )
+        }
       }
     }
     .onAppear {
@@ -590,28 +617,51 @@ struct SkillForm: View {
       title = skill.displayTitle
       domain = skill.domain
       dependency = skill.prerequisites.first ?? ""
+      focusMode = skill.focusListMode
       apps = skill.focusApps
       sites = skill.focusSites
     }
   }
-  private func addSite() {
-    guard sites.count < FocusList.limit else { return }
-    guard let host = FocusList.site(site) else {
-      listMessage = "Enter a domain such as github.com."
+  private var focusExplanation: LocalizedStringKey {
+    focusMode == .onlyListed
+      ? "The timer runs only in the listed apps or on the listed sites."
+      : "The timer pauses in the listed apps or on the listed sites."
+  }
+  private func addApplication() {
+    guard let url = FocusList.chooseApplication() else { return }
+    guard let bundle = Bundle(url: url)?.bundleIdentifier, !bundle.isEmpty else {
+      appError = true
       return
     }
-    listMessage = ""
-    site = ""
-    if !sites.contains(host) { sites.append(host) }
+    appError = false
+    if !apps.contains(bundle) { apps.append(bundle) }
   }
-  private func focusChip(_ title: String, remove: @escaping () -> Void) -> some View {
+  private func addSite() -> Bool {
+    guard !siteDraftIsEmpty else { return false }
+    guard let host = FocusList.site(site) else {
+      siteError = true
+      return false
+    }
+    if !sites.contains(host) {
+      guard sites.count < FocusList.limit else { return false }
+      sites.append(host)
+    }
+    site = ""
+    siteError = false
+    return true
+  }
+  private func focusError(_ text: LocalizedStringKey) -> some View {
+    Text(text).font(.system(size: 11)).foregroundStyle(AppStyle.amber)
+      .fixedSize(horizontal: false, vertical: true)
+  }
+  private func focusEntry(_ title: String, symbol: String, remove: @escaping () -> Void) -> some View {
     HStack {
-      Text(title).lineLimit(1)
+      Label(title, systemImage: symbol).lineLimit(1)
       Spacer()
       Button(action: remove) {
         Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
       }
-      .buttonStyle(.borderless).accessibilityLabel("Remove")
+      .buttonStyle(.borderless).accessibilityLabel(L("Remove %@", title))
     }
   }
 }

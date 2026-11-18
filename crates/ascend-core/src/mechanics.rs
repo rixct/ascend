@@ -1637,16 +1637,51 @@ fn focus_lists_match_the_front_app_or_active_site() {
     assert!(normalize_site("javascript:alert(1)").is_none());
     assert!(normalize_site("com").is_none());
 
-    let mut skill = setup().skills.remove(0);
-    assert!(skill.allows_focus("com.apple.finder", None));
-    skill.allowed_apps = vec!["com.apple.dt.Xcode".into()];
-    skill.allowed_sites = vec!["github.com".into()];
-    assert!(skill.allows_focus("com.apple.dt.Xcode", None));
-    assert!(skill.allows_focus("dev.ascend.desktop", None));
-    assert!(skill.allows_focus("com.apple.Safari", Some("https://docs.github.com/en")));
-    assert!(!skill.allows_focus("com.apple.Safari", Some("notgithub.com")));
-    assert!(!skill.allows_focus("com.apple.Safari", Some("github.com.evil.com")));
-    assert!(!skill.allows_focus("com.apple.Safari", None));
+    let mut rules = FocusRules::default();
+    assert!(rules.allows_focus("com.apple.finder", None, false));
+    rules.apps = vec!["com.apple.dt.Xcode".into(), "dev.ascend.desktop".into()];
+    rules.sites = vec!["github.com".into()];
+    let cases = [
+        ("com.apple.dt.Xcode", None, false, true, false),
+        ("com.apple.dt.Xcode", None, true, true, false),
+        ("dev.ascend.desktop", None, false, true, true),
+        (
+            "com.apple.Safari",
+            Some("https://docs.github.com/en"),
+            false,
+            true,
+            false,
+        ),
+        (
+            "com.apple.Safari",
+            Some("notgithub.com"),
+            false,
+            false,
+            true,
+        ),
+        (
+            "com.apple.Safari",
+            Some("github.com.evil.com"),
+            false,
+            false,
+            true,
+        ),
+        ("com.apple.Safari", None, false, false, true),
+        ("com.apple.Safari", None, true, false, false),
+        ("com.apple.finder", None, false, false, true),
+        ("", None, false, false, false),
+    ];
+    for (bundle, host, site_unavailable, allowed, _) in cases {
+        assert_eq!(rules.allows_focus(bundle, host, site_unavailable), allowed);
+    }
+    rules.mode = FocusListMode::ExceptListed;
+    for (bundle, host, site_unavailable, _, allowed) in cases {
+        assert_eq!(rules.allows_focus(bundle, host, site_unavailable), allowed);
+    }
+    rules.sites.clear();
+    assert!(rules.allows_focus("com.apple.Safari", None, true));
+    rules.apps.clear();
+    assert!(rules.allows_focus("", None, true));
 
     let apps: Vec<_> = (0..25).map(|index| format!("app{index}.example")).collect();
     assert!(normalize_focus_lists(&apps, Vec::<String>::new()).is_err());
@@ -1671,14 +1706,17 @@ fn editing_a_skill_keeps_progress_and_rejects_a_cycle() {
             "  Rust  ".into(),
             Domain::Mind,
             vec![],
-            vec!["com.apple.dt.Xcode".into()],
-            vec!["https://www.GitHub.com/rust-lang".into()],
+            FocusRules {
+                apps: vec!["com.apple.dt.Xcode".into()],
+                sites: vec!["https://www.GitHub.com/rust-lang".into()],
+                ..Default::default()
+            },
         )
         .unwrap();
     assert_eq!(state.skills[0].title, "Rust");
     assert_eq!(state.skills[0].xp_milli, xp);
     assert_eq!(state.skills[0].mastery, 0);
-    assert_eq!(state.skills[0].allowed_sites, vec!["github.com"]);
+    assert_eq!(state.skills[0].focus_rules.sites, vec!["github.com"]);
     let before = state.skills[0].clone();
     assert!(
         state
@@ -1687,8 +1725,7 @@ fn editing_a_skill_keeps_progress_and_rejects_a_cycle() {
                 "Rust".into(),
                 Domain::Mind,
                 vec![rust],
-                vec![],
-                vec![]
+                FocusRules::default(),
             )
             .is_err()
     );
@@ -1701,15 +1738,20 @@ fn editing_a_skill_keeps_progress_and_rejects_a_cycle() {
                 "Rust".into(),
                 Domain::Mind,
                 vec![architecture],
-                vec![],
-                vec![],
+                FocusRules::default(),
             )
             .is_err()
     );
     assert!(state.skills[0].prerequisites.is_empty());
     assert!(
         state
-            .update_skill(rust, "  ".into(), Domain::Mind, vec![], vec![], vec![])
+            .update_skill(
+                rust,
+                "  ".into(),
+                Domain::Mind,
+                vec![],
+                FocusRules::default()
+            )
             .is_err()
     );
     assert_eq!(state.skills[0].title, "Rust");
@@ -1720,12 +1762,14 @@ fn editing_a_skill_keeps_progress_and_rejects_a_cycle() {
                 "Rust".into(),
                 Domain::Mind,
                 vec![],
-                vec!["hello world".into()],
-                vec![],
+                FocusRules {
+                    apps: vec!["hello world".into()],
+                    ..Default::default()
+                },
             )
             .is_err()
     );
-    assert_eq!(state.skills[0].allowed_apps, vec!["com.apple.dt.Xcode"]);
+    assert_eq!(state.skills[0].focus_rules.apps, vec!["com.apple.dt.Xcode"]);
 }
 
 #[test]

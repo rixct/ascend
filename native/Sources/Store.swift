@@ -136,7 +136,9 @@ import UniformTypeIdentifiers
             self.state?.active = timer.active
           }
           if !self.terminating { self.presence.sync(active: self.state?.active) }
-          if operation.command == "start" { self.reportFocus() }
+          if ["start", "pause", "update_skill", "update_quest"].contains(operation.command) {
+            self.reportFocus()
+          }
           if let preview = response.extra?.preview { self.preview = preview }
           operation.then?()
         } else {
@@ -168,11 +170,15 @@ import UniformTypeIdentifiers
       let skill = state?.skills.first(where: { $0.id == quest.skill_id }),
       skill.restrictsFocus
     else { return }
-    focusReporter.sample(readSite: !skill.focusSites.isEmpty)
+    focusReporter.sample(readSite: !skill.focusSites.isEmpty, skipSiteFor: skill.focusApps)
   }
-  private func sendFocus(_ bundle: String, _ host: String?) {
+  private func sendFocus(_ bundle: String, _ site: FocusSiteObservation) {
     var values: [String: Any] = ["bundle_id": bundle]
-    if let host { values["host"] = host }
+    switch site {
+    case .observed(let host?): values["host"] = host
+    case .observed(nil): break
+    case .unavailable: values["site_unavailable"] = true
+    }
     send("focus", values)
   }
   func prepareToTerminate(_ completion: @escaping () -> Void) {

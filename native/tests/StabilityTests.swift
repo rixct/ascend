@@ -135,13 +135,18 @@ private final class WeakReference<T: AnyObject> {
       if importConfirmed { break }
       try await Task.sleep(nanoseconds: 20_000_000)
     }
+    require(importConfirmed, "Import confirmation did not reach the engine")
     let importLog = try String(contentsOf: log)
     require(
       !importLog.contains("cancel_import"), "Dismissal cancelled Replace before its action")
     store?.cancelImport()
-    try await Task.sleep(nanoseconds: 100_000_000)
-    let cancelledLog = try String(contentsOf: log)
-    require(cancelledLog.contains("cancel_import"), "Explicit cancel did not reach the engine")
+    var cancelDelivered = false
+    for _ in 0..<500 {
+      cancelDelivered = try String(contentsOf: log).contains("cancel_import")
+      if cancelDelivered { break }
+      try await Task.sleep(nanoseconds: 20_000_000)
+    }
+    require(cancelDelivered, "Explicit cancel did not reach the engine")
     store?.skillSelection = ["one", "two", "three"]
     store?.deleteSelectedSkills()
     for _ in 0..<500 {
@@ -195,41 +200,54 @@ private final class WeakReference<T: AnyObject> {
 
     mark("focus")
     // Browser automation must not strand utility threads or accumulate blocked pipes.
-    for mode in ["focus_ok", "focus_long_url", "focus_failed", "focus_flood", "focus_stubborn"] {
+    let browserCases: [(String, FocusSiteObservation)] = [
+      ("focus_ok", .observed("example.com")), ("focus_long_url", .observed("example.com")),
+      ("focus_blank", .observed(nil)), ("focus_failed", .unavailable),
+      ("focus_flood", .unavailable), ("focus_stubborn", .unavailable),
+    ]
+    for (mode, expected) in browserCases {
       let started = ProcessInfo.processInfo.systemUptime
-      let host: String? = await withCheckedContinuation { continuation in
+      let observation = await withCheckedContinuation { continuation in
         FocusBrowser.readOutput(executable: python, arguments: [fixture, mode, "-"], timeout: 0.3) {
           continuation.resume(returning: $0)
         }
       }
-      require(host == (["focus_ok", "focus_long_url"].contains(mode) ? "example.com" : nil), "Unexpected browser host for \(mode)")
+      require(observation == expected, "Unexpected browser result for \(mode)")
       require(ProcessInfo.processInfo.systemUptime - started < 8, "Browser query hung: \(mode)")
     }
     var browser = "com.apple.Safari"
     var uptime: TimeInterval = 100
-    var browserReply: ((String?) -> Void)?
-    var reportedHost: String?
+    var browserReply: ((FocusSiteObservation) -> Void)?
+    var reportedSite: FocusSiteObservation?
     let reporter = FocusReporter(currentBundle: { browser }, now: { uptime }, readHost: { _, reply in browserReply = reply })
-    reporter.onReport = { _, host in reportedHost = host }
+    reporter.onReport = { _, site in reportedSite = site }
     reporter.sample(readSite: true)
-    browserReply?("example.com")
-    require(reportedHost == "example.com", "Focus report did not record the site")
+    require(reportedSite == .unavailable, "A pending browser query was reported as observed")
+    browserReply?(.observed("example.com"))
+    require(reportedSite == .observed("example.com"), "Focus report did not record the site")
     reporter.sample(readSite: true)
-    browserReply?(nil)
-    require(reportedHost == nil, "A failed browser query retained the allowed site")
+    browserReply?(.unavailable)
+    require(reportedSite == .unavailable, "A failed browser query retained the known site")
     reporter.sample(readSite: true)
-    browserReply?("example.com")
+    browserReply?(.observed(nil))
+    require(reportedSite == .observed(nil), "A blank browser tab was reported as unavailable")
     uptime += 2.1
     reporter.sample(readSite: true)
-    require(reportedHost == nil, "Expired browser observations kept authorizing focus")
+    require(reportedSite == .unavailable, "Expired browser observations kept authorizing focus")
     uptime += 2.1
-    browserReply?("example.com")
-    require(reportedHost == nil, "A delayed browser response authorized stale focus")
+    browserReply?(.observed("example.com"))
+    require(reportedSite == .unavailable, "A delayed browser response authorized stale focus")
     reporter.sample(readSite: true)
     browser = "com.apple.TextEdit"
-    browserReply?("example.com")
-    require(reportedHost == nil, "A browser response outlived the frontmost application")
+    browserReply?(.observed("example.com"))
+    require(reportedSite == .unavailable, "A browser response outlived the frontmost application")
+    reporter.sample(readSite: true)
+    require(reportedSite == .observed(nil), "A non-browser app unexpectedly needed a tab check")
     reporter.stop()
+    browser = "com.apple.Safari"
+    browserReply = nil
+    reporter.sample(readSite: true, skipSiteFor: [browser])
+    require(browserReply == nil && reportedSite == .observed(nil), "A listed browser triggered a tab check")
 
     mark("scoped")
     let scopedLog = directory.appendingPathComponent("scoped-notes.jsonl")
