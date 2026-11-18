@@ -567,7 +567,7 @@ struct RulesSettings: View {
             "XP credits up to 125% of the estimate. R decreases after 180 and 300 minutes of all practice in a day.",
             "Habits earn 1 XP, up to 4 XP per day, and that time counts toward R. A habit establishes a skill after 7 completed days.",
             "Linked milestones share a 40 XP bonus. It is paid when every planned session is done, and never exceeds the practice XP earned on that milestone.",
-            "If a skill lists apps or websites, the timer counts only while one of them is in front. ASCEND itself always counts. A website counts in the browser's active tab.",
+            "A skill can count time only in the listed apps and sites or pause the timer in those places. An empty list lets the timer run anywhere. ASCEND always counts.",
           ])
         rule(
           "Discipline",

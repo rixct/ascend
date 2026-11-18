@@ -101,6 +101,11 @@ struct Profile: Decodable {
   var onboarded: Bool
   var strict_mode: Bool? = nil
 }
+enum FocusListMode: String, Decodable {
+  case onlyListed = "only_listed"
+  case exceptListed = "except_listed"
+}
+
 struct Skill: Decodable, Identifiable, Equatable {
   var id: String
   var title: String
@@ -109,10 +114,18 @@ struct Skill: Decodable, Identifiable, Equatable {
   var mastery: Int
   var evidence: [String]
   var prerequisites: [String]
+  var focus_list_mode: FocusListMode? = nil
   var allowed_apps: [String]? = nil
   var allowed_sites: [String]? = nil
-  var focusApps: [String] { allowed_apps ?? [] }
-  var focusSites: [String] { allowed_sites ?? [] }
+  var excluded_apps: [String]? = nil
+  var excluded_sites: [String]? = nil
+  var focusListMode: FocusListMode { focus_list_mode ?? .onlyListed }
+  var focusApps: [String] {
+    (focusListMode == .exceptListed ? excluded_apps ?? allowed_apps : allowed_apps) ?? []
+  }
+  var focusSites: [String] {
+    (focusListMode == .exceptListed ? excluded_sites ?? allowed_sites : allowed_sites) ?? []
+  }
   var restrictsFocus: Bool { !focusApps.isEmpty || !focusSites.isEmpty }
 }
 struct QuestStep: Decodable, Identifiable, Equatable {

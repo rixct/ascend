@@ -45,9 +45,13 @@ enum FocusList {
     return FileManager.default.displayName(atPath: url.path)
   }
   static func summary(_ skill: Skill) -> String {
-    (skill.focusApps.map { applicationName($0) } + skill.focusSites).joined(separator: ", ")
+    guard skill.restrictsFocus else { return L("Timer runs in any app.") }
+    let entries = (skill.focusApps.map { applicationName($0) } + skill.focusSites)
+      .joined(separator: ", ")
+    return skill.focusListMode == .onlyListed
+      ? L("Timer runs in %@.", entries) : L("Timer pauses in %@.", entries)
   }
-  static func chooseApplication() -> (bundle: String, name: String)? {
+  static func chooseApplication() -> URL? {
     let panel = NSOpenPanel()
     panel.allowedContentTypes = [.application]
     panel.allowsMultipleSelection = false
@@ -55,11 +59,13 @@ enum FocusList {
     panel.canChooseFiles = true
     panel.directoryURL = URL(fileURLWithPath: "/Applications")
     panel.prompt = L("Add")
-    guard panel.runModal() == .OK, let url = panel.url,
-      let bundle = Bundle(url: url)?.bundleIdentifier, !bundle.isEmpty
-    else { return nil }
-    return (bundle, FileManager.default.displayName(atPath: url.path))
+    return panel.runModal() == .OK ? panel.url : nil
   }
+}
+
+enum FocusSiteObservation: Equatable {
+  case observed(String?)
+  case unavailable
 }
 
 enum FocusBrowser {
@@ -76,9 +82,9 @@ enum FocusBrowser {
     "org.chromium.Chromium": ("Chromium", false),
   ]
   static func knows(_ bundle: String) -> Bool { applications[bundle] != nil }
-  static func read(_ bundle: String, completion: @escaping (String?) -> Void) {
+  static func read(_ bundle: String, completion: @escaping (FocusSiteObservation) -> Void) {
     guard let application = applications[bundle] else {
-      completion(nil)
+      completion(.unavailable)
       return
     }
     let property =
@@ -90,7 +96,7 @@ enum FocusBrowser {
   /// Both output and execution time are bounded, including children that ignore SIGTERM.
   static func readOutput(
     executable: URL, arguments: [String], timeout: TimeInterval = 8,
-    completion: @escaping (String?) -> Void
+    completion: @escaping (FocusSiteObservation) -> Void
   ) {
     DispatchQueue.global(qos: .utility).async {
       let process = Process()
@@ -99,12 +105,12 @@ enum FocusBrowser {
       let output = Pipe()
       process.standardOutput = output
       process.standardError = FileHandle.nullDevice
-      var host: String?
+      var observation = FocusSiteObservation.unavailable
       defer {
         if process.isRunning { _ = Darwin.kill(process.processIdentifier, SIGKILL) }
         try? output.fileHandleForReading.close()
         try? output.fileHandleForWriting.close()
-        DispatchQueue.main.async { completion(host) }
+        DispatchQueue.main.async { completion(observation) }
       }
       do { try process.run() } catch { return }
       let fd = output.fileHandleForReading.fileDescriptor
@@ -133,7 +139,11 @@ enum FocusBrowser {
           if !process.isRunning {
             if process.terminationStatus == 0 {
               let url = (String(data: data, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-              host = URLComponents(string: url)?.host.flatMap(FocusList.site)
+              if url == "missing value" {
+                observation = .observed(nil)
+              } else if let components = URLComponents(string: url), components.scheme != nil {
+                observation = .observed(components.host.flatMap(FocusList.site))
+              }
             }
             return
           }
@@ -146,21 +156,21 @@ enum FocusBrowser {
 }
 
 @MainActor final class FocusReporter {
-  var onReport: ((String, String?) -> Void)?
+  var onReport: ((String, FocusSiteObservation) -> Void)?
   var onActivate: (() -> Void)?
   private var observer: NSObjectProtocol?
   private var bundle = ""
-  private var host: String?
-  private var hostObservedAt: TimeInterval?
+  private var siteObservation = FocusSiteObservation.unavailable
+  private var siteObservedAt: TimeInterval?
   private let now: () -> TimeInterval
   private let currentBundle: () -> String
-  private let readHost: (String, @escaping (String?) -> Void) -> Void
+  private let readHost: (String, @escaping (FocusSiteObservation) -> Void) -> Void
   private var reading = false
   private var generation = 0
   init(
     currentBundle: @escaping () -> String = { NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "" },
     now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
-    readHost: @escaping (String, @escaping (String?) -> Void) -> Void = FocusBrowser.read
+    readHost: @escaping (String, @escaping (FocusSiteObservation) -> Void) -> Void = FocusBrowser.read
   ) {
     self.now = now
     self.currentBundle = currentBundle
@@ -182,22 +192,26 @@ enum FocusBrowser {
   func stop() {
     generation += 1
     reading = false
-    host = nil
-    hostObservedAt = nil
+    siteObservation = .unavailable
+    siteObservedAt = nil
     if let observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
     observer = nil
   }
-  func sample(readSite: Bool) {
+  func sample(readSite: Bool, skipSiteFor listedApps: [String] = []) {
     let current = currentBundle()
     let now = self.now()
     if current != bundle {
       bundle = current
-      host = nil
-      hostObservedAt = nil
+      siteObservation = .unavailable
+      siteObservedAt = nil
     }
-    if hostObservedAt.map({ now - $0 >= 2 }) ?? true { host = nil }
-    onReport?(current, host)
-    guard readSite, FocusBrowser.knows(current), !reading else { return }
+    guard readSite, !listedApps.contains(current), FocusBrowser.knows(current) else {
+      onReport?(current, .observed(nil))
+      return
+    }
+    if siteObservedAt.map({ now - $0 >= 2 }) ?? true { siteObservation = .unavailable }
+    onReport?(current, siteObservation)
+    guard !reading else { return }
     reading = true
     generation += 1
     let token = generation
@@ -205,18 +219,16 @@ enum FocusBrowser {
       guard let self, self.generation == token else { return }
       self.reading = false
       guard self.bundle == current, self.currentBundle() == current else { return }
-      // A failed/slow browser query must revoke a previously allowed site.
-      let fresh = self.now() - now < 2
-      self.host = fresh ? found : nil
-      self.hostObservedAt = fresh && found != nil ? now : nil
-      self.onReport?(current, self.host)
+      self.siteObservation = self.now() - now < 2 ? found : .unavailable
+      self.siteObservedAt = self.siteObservation == .unavailable ? nil : now
+      self.onReport?(current, self.siteObservation)
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 9) { [weak self] in
       guard let self, self.generation == token else { return }
       self.reading = false
       self.generation += 1
-      self.host = nil
-      self.hostObservedAt = nil
+      self.siteObservation = .unavailable
+      self.siteObservedAt = nil
     }
   }
   deinit {

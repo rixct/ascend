@@ -28,6 +28,8 @@ enum Command {
         bundle_id: String,
         #[serde(default)]
         host: Option<String>,
+        #[serde(default)]
+        site_unavailable: bool,
     },
     DiscardSession {
         id: Id,
@@ -103,20 +105,16 @@ enum Command {
         title: String,
         domain: Domain,
         prerequisites: Vec<Id>,
-        #[serde(default)]
-        allowed_apps: Vec<String>,
-        #[serde(default)]
-        allowed_sites: Vec<String>,
+        #[serde(flatten)]
+        focus_rules: FocusRules,
     },
     UpdateSkill {
         id: Id,
         title: String,
         domain: Domain,
         prerequisites: Vec<Id>,
-        #[serde(default)]
-        allowed_apps: Vec<String>,
-        #[serde(default)]
-        allowed_sites: Vec<String>,
+        #[serde(flatten)]
+        focus_rules: FocusRules,
     },
     DeleteSkill {
         id: Id,
@@ -210,7 +208,7 @@ struct FocusLease {
     until: Instant,
     allowed: bool,
 }
-fn focus_configuration(state: &GameState) -> Option<(Id, Vec<String>, Vec<String>)> {
+fn focus_configuration(state: &GameState) -> Option<(Id, FocusRules)> {
     let active = state.active.as_ref()?;
     let quest = state
         .quests
@@ -220,16 +218,9 @@ fn focus_configuration(state: &GameState) -> Option<(Id, Vec<String>, Vec<String
         .skills
         .iter()
         .find(|skill| skill.id == quest.skill_id)?;
-    Some((
-        skill.id,
-        skill.allowed_apps.clone(),
-        skill.allowed_sites.clone(),
-    ))
+    Some((skill.id, skill.focus_rules.clone()))
 }
-fn reset_focus_after_edit(
-    state: &mut GameState,
-    previous: &Option<(Id, Vec<String>, Vec<String>)>,
-) -> bool {
+fn reset_focus_after_edit(state: &mut GameState, previous: &Option<(Id, FocusRules)>) -> bool {
     let changed = focus_configuration(state) != *previous;
     if changed {
         let restricts = state
@@ -526,8 +517,7 @@ impl Engine {
                 title,
                 domain,
                 prerequisites,
-                allowed_apps,
-                allowed_sites,
+                focus_rules,
             } => {
                 self.repo.apply(&mut self.state, |s| {
                     if title.trim().is_empty()
@@ -537,13 +527,12 @@ impl Engine {
                     {
                         return Err(invalid("Проверьте название и зависимости навыка"));
                     }
-                    let (allowed_apps, allowed_sites) =
-                        normalize_focus_lists(allowed_apps, allowed_sites)
-                            .map_err(|_| invalid("Проверьте список приложений и сайтов"))?;
+                    let focus_rules = focus_rules
+                        .normalized()
+                        .map_err(|_| invalid("Проверьте список приложений и сайтов"))?;
                     let id = s.add_skill(title.trim().into(), domain, prerequisites);
                     if let Some(skill) = s.skills.iter_mut().find(|skill| skill.id == id) {
-                        skill.allowed_apps = allowed_apps;
-                        skill.allowed_sites = allowed_sites;
+                        skill.focus_rules = focus_rules;
                     }
                     Ok(())
                 })?;
@@ -553,20 +542,12 @@ impl Engine {
                 title,
                 domain,
                 prerequisites,
-                allowed_apps,
-                allowed_sites,
+                focus_rules,
             } => {
                 self.advance()?;
                 let focus_before = focus_configuration(&self.state);
                 let changed = self.repo.apply(&mut self.state, |s| {
-                    s.update_skill(
-                        id,
-                        title,
-                        domain,
-                        prerequisites,
-                        allowed_apps,
-                        allowed_sites,
-                    )?;
+                    s.update_skill(id, title, domain, prerequisites, focus_rules)?;
                     Ok(reset_focus_after_edit(s, &focus_before))
                 })?;
                 if changed {
@@ -681,7 +662,7 @@ impl Engine {
                     let restricts = s
                         .skills
                         .iter()
-                        .any(|skill| skill.id == skill_id && skill.restricts_focus());
+                        .any(|skill| skill.id == skill_id && skill.focus_rules.restricts_focus());
                     s.active = Some(ActiveSession {
                         id: Id::new_v4(),
                         quest_id: id,
@@ -731,7 +712,11 @@ impl Engine {
                 self.fraction = Duration::ZERO;
                 self.last = Instant::now();
             }
-            Command::Focus { bundle_id, host } => {
+            Command::Focus {
+                bundle_id,
+                host,
+                site_unavailable,
+            } => {
                 self.advance()?;
                 let decision = self
                     .state
@@ -741,8 +726,12 @@ impl Engine {
                     .map(|active| {
                         (
                             active.id,
-                            self.state
-                                .focus_allows(active.quest_id, &bundle_id, host.as_deref()),
+                            self.state.focus_allows(
+                                active.quest_id,
+                                &bundle_id,
+                                host.as_deref(),
+                                site_unavailable,
+                            ),
                         )
                     });
                 let now = Instant::now();

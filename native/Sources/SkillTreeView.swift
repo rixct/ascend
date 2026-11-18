@@ -138,11 +138,7 @@ struct SkillTreeView: View {
             Text(LocalizedStringKey(treeDomain(skill.domain).title)).font(.system(size: 12))
               .foregroundStyle(
                 .secondary)
-            Text(
-              skill.restrictsFocus
-                ? L("Timer runs in %@.", FocusList.summary(skill))
-                : L("Timer runs in any app.")
-            )
+            Text(FocusList.summary(skill))
             .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(
               horizontal: false, vertical: true)
             PencilButton(label: "Edit skill") { store.sheet = .editSkill(skill.id) }

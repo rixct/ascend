@@ -11,6 +11,9 @@ if mode == 'focus_ok':
 if mode == 'focus_long_url':
     print('https://www.example.com/lesson?query=' + 'x' * 1000, flush=True)
     sys.exit(0)
+if mode == 'focus_blank':
+    print('about:blank', flush=True)
+    sys.exit(0)
 if mode == 'focus_failed':
     print('https://example.com/lesson', flush=True)
     sys.exit(1)

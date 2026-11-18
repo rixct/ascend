@@ -182,8 +182,8 @@ fn a_listed_app_or_site_is_required_before_the_timer_counts() {
             .iter_mut()
             .find(|item| item.id == skill)
             .unwrap();
-    entry.allowed_apps = vec!["com.apple.dt.Xcode".into()];
-    entry.allowed_sites = vec!["github.com".into()];
+    entry.focus_rules.apps = vec!["com.apple.dt.Xcode".into()];
+    entry.focus_rules.sites = vec!["github.com".into()];
     f.0.last = Instant::now() - Duration::from_secs(2);
     f.0.advance().unwrap();
     assert_eq!(f.0.state.active.as_ref().unwrap().elapsed_seconds, 0);
@@ -192,6 +192,7 @@ fn a_listed_app_or_site_is_required_before_the_timer_counts() {
     f.0.run(Command::Focus {
         bundle_id: "com.apple.Safari".into(),
         host: Some("notgithub.com".into()),
+        site_unavailable: false,
     })
     .unwrap();
     f.0.last = Instant::now() - Duration::from_secs(2);
@@ -201,6 +202,7 @@ fn a_listed_app_or_site_is_required_before_the_timer_counts() {
     f.0.run(Command::Focus {
         bundle_id: "com.apple.Safari".into(),
         host: Some("https://docs.github.com/rust".into()),
+        site_unavailable: false,
     })
     .unwrap();
     let now = Instant::now();
@@ -222,7 +224,8 @@ fn strict_presence_and_focus_must_overlap() {
         .iter_mut()
         .find(|item| item.id == skill)
         .unwrap()
-        .allowed_apps = vec!["com.apple.dt.Xcode".into()];
+        .focus_rules
+        .apps = vec!["com.apple.dt.Xcode".into()];
     let now = Instant::now();
     f.0.last = now - Duration::from_secs(4);
     f.0.presence = Some(PresenceLease {
@@ -312,23 +315,29 @@ fn notes_for_an_old_session_never_replace_current_notes() {
 fn changing_active_skill_focus_rules_invalidates_the_old_permission() {
     let mut f = Fixture::new(false);
     let skill = f.0.state.quests[0].skill_id;
-    let change = |apps: Vec<String>| Command::UpdateSkill {
+    let change = |mode, apps: Vec<String>| Command::UpdateSkill {
         id: skill,
         title: "Study".into(),
         domain: Domain::Mind,
         prerequisites: vec![],
-        allowed_apps: apps,
-        allowed_sites: vec![],
+        focus_rules: FocusRules {
+            mode,
+            apps,
+            sites: vec![],
+        },
     };
-    f.0.run(change(vec!["com.apple.dt.Xcode".into()])).unwrap();
+    let apps = vec!["com.apple.dt.Xcode".into()];
+    f.0.run(change(FocusListMode::OnlyListed, apps.clone()))
+        .unwrap();
     f.0.run(Command::Focus {
         bundle_id: "com.apple.dt.Xcode".into(),
         host: None,
+        site_unavailable: false,
     })
     .unwrap();
     assert!(f.0.state.active.as_ref().unwrap().focus_confirmed);
     assert!(f.0.focus.is_some());
-    f.0.run(change(vec!["com.apple.Terminal".into()])).unwrap();
+    f.0.run(change(FocusListMode::ExceptListed, apps)).unwrap();
     assert!(f.0.focus.is_none());
     assert!(!f.0.state.active.as_ref().unwrap().focus_confirmed);
     let before = f.0.state.active.as_ref().unwrap().elapsed_seconds;
@@ -336,12 +345,32 @@ fn changing_active_skill_focus_rules_invalidates_the_old_permission() {
     f.0.advance().unwrap();
     assert_eq!(f.0.state.active.as_ref().unwrap().elapsed_seconds, before);
     f.0.run(Command::Focus {
+        bundle_id: "com.apple.dt.Xcode".into(),
+        host: None,
+        site_unavailable: false,
+    })
+    .unwrap();
+    assert!(!f.0.state.active.as_ref().unwrap().focus_confirmed);
+    f.0.last = Instant::now() - Duration::from_secs(2);
+    f.0.advance().unwrap();
+    assert_eq!(f.0.state.active.as_ref().unwrap().elapsed_seconds, before);
+    f.0.run(Command::Focus {
         bundle_id: "com.apple.Terminal".into(),
         host: None,
+        site_unavailable: false,
     })
     .unwrap();
     assert!(f.0.state.active.as_ref().unwrap().focus_confirmed);
-    f.0.run(change(vec![])).unwrap();
+    let window_start = Instant::now() - Duration::from_secs(2);
+    f.0.focus.as_mut().unwrap().from = window_start;
+    f.0.last = window_start;
+    f.0.advance().unwrap();
+    assert_eq!(
+        f.0.state.active.as_ref().unwrap().elapsed_seconds,
+        before + 2
+    );
+    f.0.run(change(FocusListMode::ExceptListed, vec![]))
+        .unwrap();
     assert!(f.0.state.active.as_ref().unwrap().focus_confirmed);
 }
 
@@ -354,13 +383,16 @@ fn moving_active_quest_invalidates_the_old_skills_focus_permission() {
         title: "New skill".into(),
         domain: Domain::Mind,
         prerequisites: vec![],
-        allowed_apps: vec!["com.apple.Terminal".into()],
-        allowed_sites: vec![],
+        focus_rules: FocusRules {
+            apps: vec!["com.apple.Terminal".into()],
+            ..Default::default()
+        },
     })
     .unwrap();
     f.0.run(Command::Focus {
         bundle_id: "com.apple.dt.Xcode".into(),
         host: None,
+        site_unavailable: false,
     })
     .unwrap();
     let mut quest = serde_json::to_value(&f.0.state.quests[0]).unwrap();

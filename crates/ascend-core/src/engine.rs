@@ -652,8 +652,7 @@ impl GameState {
         title: String,
         domain: Domain,
         prerequisites: Vec<Id>,
-        allowed_apps: Vec<String>,
-        allowed_sites: Vec<String>,
+        focus_rules: FocusRules,
     ) -> Result<()> {
         let title = title.trim().to_string();
         if title.is_empty()
@@ -664,7 +663,8 @@ impl GameState {
         {
             return Err(invalid("Проверьте название и зависимости навыка"));
         }
-        let (allowed_apps, allowed_sites) = normalize_focus_lists(allowed_apps, allowed_sites)
+        let focus_rules = focus_rules
+            .normalized()
             .map_err(|_| invalid("Проверьте список приложений и сайтов"))?;
         let index = self
             .skills
@@ -675,8 +675,7 @@ impl GameState {
         self.skills[index].title = title;
         self.skills[index].domain = domain;
         self.skills[index].prerequisites = prerequisites;
-        self.skills[index].allowed_apps = allowed_apps;
-        self.skills[index].allowed_sites = allowed_sites;
+        self.skills[index].focus_rules = focus_rules;
         if let Err(error) = self.validate() {
             self.skills[index] = previous;
             return Err(error);
@@ -712,11 +711,10 @@ impl GameState {
         let skills: HashSet<_> = self.skills.iter().map(|s| s.id).collect();
         let quests: HashSet<_> = self.quests.iter().map(|q| q.id).collect();
         if self.skills.iter().any(|skill| {
-            normalize_focus_lists(&skill.allowed_apps, &skill.allowed_sites)
+            let rules = &skill.focus_rules;
+            normalize_focus_lists(&rules.apps, &rules.sites)
                 .ok()
-                .is_none_or(|(apps, sites)| {
-                    apps != skill.allowed_apps || sites != skill.allowed_sites
-                })
+                .is_none_or(|(apps, sites)| apps != rules.apps || sites != rules.sites)
         }) {
             return Err(invalid("Проверьте список приложений и сайтов"));
         }
