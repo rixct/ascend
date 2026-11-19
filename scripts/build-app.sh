@@ -16,8 +16,10 @@ cp target/release/ascend-engine "$ASCEND_APP/Contents/MacOS/.ascend-engine.$$.tm
 mv -f "$ASCEND_APP/Contents/MacOS/.ascend-engine.$$.tmp" "$ASCEND_APP/Contents/MacOS/ascend-engine"
 cp -R native/Resources/*.lproj "$ASCEND_APP/Contents/Resources/"
 cp assets/Info.plist "$ASCEND_APP/Contents/Info.plist"
+ASCEND_ICON=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' assets/Info.plist)
 swift -module-cache-path target/swift-module-cache scripts/icon.swift target/ASCEND.iconset
-iconutil -c icns target/ASCEND.iconset -o "$ASCEND_APP/Contents/Resources/ASCEND.icns"
+iconutil -c icns target/ASCEND.iconset -o "$ASCEND_APP/Contents/Resources/$ASCEND_ICON"
+rm -f "$ASCEND_APP/Contents/Resources/ASCEND.icns"
 codesign --force --sign - "$ASCEND_APP/Contents/MacOS/ascend-engine"
 codesign --force --deep --sign - "$ASCEND_APP"
 echo "Готово: $ASCEND_APP"

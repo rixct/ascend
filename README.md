@@ -34,7 +34,7 @@ Quests.
 
 ## Run
 
-Download [ASCEND 0.7.0 for Apple Silicon](https://github.com/rixct/ascend/releases/tag/v0.7.0). The app is signed locally, so macOS asks you to confirm the first launch.
+Download [ASCEND 0.7.1 for Apple Silicon](https://github.com/rixct/ascend/releases/tag/v0.7.1). The app is signed locally, so macOS asks you to confirm the first launch.
 
 Build from source:
 

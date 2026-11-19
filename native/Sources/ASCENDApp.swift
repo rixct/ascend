@@ -1,4 +1,5 @@
 import AppKit
+import CoreServices
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -21,8 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     return .terminateLater
   }
-  func applicationDidFinishLaunching(_ notification: Notification) {
-    NSApp.applicationIconImage = AppMark.dock
+  func applicationWillFinishLaunching(_ notification: Notification) {
+    // Notification Center resolves the bundle icon through Launch Services.
+    _ = LSRegisterURL(Bundle.main.bundleURL as CFURL, true)
   }
   func applicationWillTerminate(_ notification: Notification) {
     MainActor.assumeIsolated { Self.store?.shutdown() }
@@ -86,7 +88,7 @@ private struct MenuBarStatus: View {
   let active: ActiveSession?
   var body: some View {
     HStack(spacing: 5) {
-      Image(nsImage: AppMark.menuBar)
+      Image(nsImage: NSApplication.shared.applicationIconImage)
         .renderingMode(.original)
         .frame(width: 18, height: 18)
       if let active {
@@ -96,53 +98,6 @@ private struct MenuBarStatus: View {
     }
     .accessibilityLabel(
       active.map { "\(L("Session")) \(clock($0.elapsed_seconds))" } ?? "ASCEND")
-  }
-}
-
-enum AppMark {
-  static let menuBar = image(points: 18)
-  static let dock = image(points: 512)
-
-  static func image(points: CGFloat) -> NSImage {
-    let scale = NSScreen.main?.backingScaleFactor ?? 2
-    let pixels = max(1, Int((points * scale).rounded()))
-    let fallback = NSImage(size: NSSize(width: points, height: points))
-    guard
-      let bitmap = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels, bitsPerSample: 8,
-        samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
-        bytesPerRow: 0, bitsPerPixel: 0)
-    else { return fallback }
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
-    draw(edge: CGFloat(pixels))
-    NSGraphicsContext.restoreGraphicsState()
-    let image = NSImage(size: NSSize(width: points, height: points))
-    image.addRepresentation(bitmap)
-    image.isTemplate = false
-    return image
-  }
-
-  static func draw(edge w: CGFloat) {
-    let margin = w * 100 / 1024
-    let side = w * 824 / 1024
-    let bounds = NSRect(x: margin, y: margin, width: side, height: side)
-    let radius = side * 185 / 824
-    let shape = NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius)
-    NSColor(red: 0.11, green: 0.13, blue: 0.12, alpha: 1).setFill()
-    shape.fill()
-    func pt(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
-      NSPoint(x: margin + side * x, y: margin + side * y)
-    }
-    let mark = NSBezierPath()
-    mark.move(to: pt(0.25, 0.348))
-    mark.line(to: pt(0.50, 0.696))
-    mark.line(to: pt(0.75, 0.348))
-    mark.lineWidth = side * 0.096
-    mark.lineCapStyle = .round
-    mark.lineJoinStyle = .round
-    NSColor(red: 0.95, green: 0.97, blue: 0.95, alpha: 1).setStroke()
-    mark.stroke()
   }
 }
 
