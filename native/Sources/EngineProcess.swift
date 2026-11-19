@@ -77,7 +77,7 @@ final class EngineProcess: @unchecked Sendable {
       }
     }
   }
-  private func exchange(_ command: [String: Any]) throws -> Response {
+  private func exchange<Value: Decodable>(_ command: [String: Any], decoding: Value.Type) throws -> Value {
     guard process.isRunning, !isStopped else { throw unavailable() }
     let deadline = ProcessInfo.processInfo.systemUptime + timeout
     var data = try JSONSerialization.data(withJSONObject: command)
@@ -106,7 +106,7 @@ final class EngineProcess: @unchecked Sendable {
         guard end - buffer.startIndex <= maxResponseBytes else { throw oversized() }
         let line = Data(buffer[..<end])
         buffer = Data(buffer[buffer.index(after: end)...])
-        return try JSONDecoder().decode(Response.self, from: line)
+        return try JSONDecoder().decode(decoding, from: line)
       }
       guard buffer.count <= maxResponseBytes else { throw oversized() }
       searchStart = buffer.endIndex
@@ -127,6 +127,11 @@ final class EngineProcess: @unchecked Sendable {
       userInfo: [NSLocalizedDescriptionKey: "Ответ движка слишком большой. Перезапустите ASCEND."])
   }
   func send(_ command: [String: Any], completion: @escaping (Result<Response, Error>) -> Void) {
+    send(command, decoding: Response.self, completion: completion)
+  }
+  func send<Value: Decodable>(
+    _ command: [String: Any], decoding _: Value.Type, completion: @escaping (Result<Value, Error>) -> Void
+  ) {
     queue.async { [self] in
       guard JSONSerialization.isValidJSONObject(command) else {
         let error = NSError(
@@ -138,7 +143,7 @@ final class EngineProcess: @unchecked Sendable {
       // Do not drain an autorelease pool around the returned value. On the CI
       // runner that freed decoder temporaries still referenced by the result
       // and the process died with SIGTRAP.
-      let result = Result { try exchange(command) }
+      let result = Result { try exchange(command, decoding: Value.self) }
       if case .failure = result { shutdown() }
       DispatchQueue.main.async { completion(result) }
     }
