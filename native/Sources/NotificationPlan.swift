@@ -35,18 +35,10 @@ struct NotificationPreferences: Codable, Equatable {
 
 enum NotificationKind: String, Codable {
   case focus, plan, review, deadline, test
-  var page: Page {
-    switch self {
-    case .review: .journal
-    case .deadline: .quests
-    case .test: .settings
-    default: .dashboard
-    }
-  }
 }
 
-struct NotificationSnapshot {
-  struct Focus {
+struct NotificationSnapshot: Codable {
+  struct Focus: Codable {
     var id: String
     var title: String
     var running: Bool
@@ -54,7 +46,7 @@ struct NotificationSnapshot {
     var elapsedSeconds: Int
     var schedulingKey: String { "\(id):\(running):\(goalSeconds):\(title.prefix(100))" }
   }
-  struct DueQuest: Equatable {
+  struct DueQuest: Codable, Equatable {
     var day: String
     var title: String
   }
@@ -72,7 +64,7 @@ struct NotificationSnapshot {
   }
 }
 
-struct PlannedNotification: Equatable {
+struct PlannedNotification: Codable, Equatable {
   var id: String
   var kind: NotificationKind
   var title: String

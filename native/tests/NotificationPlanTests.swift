@@ -43,6 +43,15 @@ import Foundation
     precondition(focus.date == now.addingTimeInterval(480))
     precondition(focus.sessionID == "session")
     precondition(!plan.contains { $0.id == NotificationPlan.prefix + "plan." + today })
+    let senderRequest = NotificationSenderRequest(
+      command: .reconcile, preferences: preferences, snapshot: snapshot, plan: plan)
+    let senderData = try JSONEncoder().encode(senderRequest)
+    let decodedRequest = try JSONDecoder().decode(NotificationSenderRequest.self, from: senderData)
+    precondition(decodedRequest.command == .reconcile && decodedRequest.plan == plan)
+    precondition(decodedRequest.snapshot?.focus?.id == focus.sessionID)
+    precondition(decodedRequest.preferences == preferences)
+    precondition(NotificationRoute.kind(for: NotificationRoute.url(for: .test)!) == .test)
+    precondition(NotificationRoute.kind(for: URL(string: "ascend-notification://open/other")!) == nil)
     let key = snapshot.schedulingKey
     snapshot.focus!.elapsedSeconds += 1
     precondition(snapshot.schedulingKey == key, "A clock tick must not rebuild OS schedules")

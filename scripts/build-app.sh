@@ -20,6 +20,21 @@ ASCEND_ICON=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' assets/Info.p
 swift -module-cache-path target/swift-module-cache scripts/icon.swift target/ASCEND.iconset
 iconutil -c icns target/ASCEND.iconset -o "$ASCEND_APP/Contents/Resources/$ASCEND_ICON"
 rm -f "$ASCEND_APP/Contents/Resources/ASCEND.icns"
+ASCEND_SENDER="$ASCEND_APP/Contents/Helpers/ASCEND Notifications.app"
+mkdir -p "$ASCEND_SENDER/Contents/MacOS" "$ASCEND_SENDER/Contents/Resources"
+swiftc -O -warnings-as-errors -swift-version 5 -parse-as-library -module-cache-path target/swift-module-cache \
+    -target arm64-apple-macosx13.0 -framework AppKit -framework UserNotifications \
+    native/NotificationSender/main.swift native/Sources/NotificationSenderProtocol.swift \
+    native/Sources/NotificationPlan.swift native/Sources/Localization.swift -o target/ASCEND-Notifications
+cp target/ASCEND-Notifications "$ASCEND_SENDER/Contents/MacOS/.ASCEND-Notifications.$$.tmp"
+mv -f "$ASCEND_SENDER/Contents/MacOS/.ASCEND-Notifications.$$.tmp" "$ASCEND_SENDER/Contents/MacOS/ASCEND-Notifications"
+cp "$ASCEND_APP/Contents/Resources/$ASCEND_ICON" "$ASCEND_SENDER/Contents/Resources/"
+cp assets/NotificationSender.plist "$ASCEND_SENDER/Contents/Info.plist"
+for version_key in CFBundleShortVersionString CFBundleVersion; do
+    version_value=$(/usr/libexec/PlistBuddy -c "Print :$version_key" assets/Info.plist)
+    /usr/libexec/PlistBuddy -c "Add :$version_key string $version_value" "$ASCEND_SENDER/Contents/Info.plist"
+done
 codesign --force --sign - "$ASCEND_APP/Contents/MacOS/ascend-engine"
+codesign --force --sign - "$ASCEND_SENDER"
 codesign --force --deep --sign - "$ASCEND_APP"
 echo "Готово: $ASCEND_APP"
