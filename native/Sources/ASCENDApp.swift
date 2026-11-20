@@ -60,17 +60,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       }
     }
     Settings {
-      SettingsView().environmentObject(store).environmentObject(notifications).environmentObject(store.presence).toolbar {
-        ToolbarItem(placement: .principal) {
-          SettingsTabPicker().environmentObject(store).environmentObject(notifications)
-        }
-      }.tint(
-        colorScheme == .light && style == "colorful" ? AppStyle.choice : AppStyle.accent
-      )
-      .toggleStyle(TrailingSwitchStyle())
-      .preferredColorScheme(colorScheme).environment(
-        \.locale, AppLanguage.resolved(language).locale
-      ).frame(width: 680, height: 700)
+      SettingsView().environmentObject(store).environmentObject(notifications).environmentObject(store.presence)
+        .tint(colorScheme == .light && style == "colorful" ? AppStyle.choice : AppStyle.accent)
+        .toggleStyle(TrailingSwitchStyle())
+        .preferredColorScheme(colorScheme)
+        .environment(\.locale, AppLanguage.resolved(language).locale)
+        .frame(width: 680, height: 700)
     }
     MenuBarExtra {
       TrayMenu().environmentObject(store).environment(
@@ -261,70 +256,25 @@ private struct WindowToolbar: View {
 }
 
 @available(macOS 26, *)
-private struct GlassBackButton: View {
+struct GlassIconButton: View {
+  let symbol: String
+  let title: LocalizedStringKey
   let action: () -> Void
+
   var body: some View {
     LiquidGlassPlate(circular: true, leadingPad: 0, verticalPad: 0) { dragged in
-      Image(systemName: "chevron.left")
-        .font(.system(size: 15, weight: .medium))
-        .frame(width: 36, height: 36)
-        .background(Color.primary.opacity(0.001))
-        .contentShape(Circle())
-        .onTapGesture { if !dragged { action() } }
-        .help(LocalizedStringKey("Back"))
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(LocalizedStringKey("Back"))
-        .accessibilityAction { action() }
+      Button {
+        if !dragged { action() }
+      } label: {
+        Image(systemName: symbol)
+          .font(.system(size: 15, weight: .medium))
+          .frame(width: 36, height: 36)
+          .contentShape(Circle())
+      }
+      .buttonStyle(.plain)
+      .help(title)
+      .accessibilityLabel(title)
     }
-  }
-}
-
-struct GlassTextButton: View {
-  let title: String
-  var enabled: Bool = true
-  var leadingPad: CGFloat = 28
-  var trailingPad: CGFloat = 8
-  var verticalPad: CGFloat = 28
-  let action: () -> Void
-  var body: some View {
-    if #available(macOS 26, *) {
-      GlassTextPlate(
-        title: title, enabled: enabled, leadingPad: leadingPad, trailingPad: trailingPad,
-        verticalPad: verticalPad, action: action)
-    } else {
-      Button(action: action) { Text(LocalizedStringKey(title)) }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(!enabled)
-    }
-  }
-}
-
-@available(macOS 26, *)
-private struct GlassTextPlate: View {
-  let title: String
-  var enabled: Bool
-  var leadingPad: CGFloat
-  var trailingPad: CGFloat
-  var verticalPad: CGFloat
-  let action: () -> Void
-  var body: some View {
-    LiquidGlassPlate(
-      circular: false, leadingPad: leadingPad, trailingPad: trailingPad, verticalPad: verticalPad
-    ) { dragged in
-      Text(LocalizedStringKey(title))
-        .font(.system(size: 13, weight: .medium))
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(Color.primary.opacity(0.001))
-        .contentShape(Capsule())
-        .onTapGesture { if enabled, !dragged { action() } }
-        .opacity(enabled ? 1 : 0.45)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(LocalizedStringKey(title))
-        .accessibilityAction { if enabled { action() } }
-    }
-    .allowsHitTesting(enabled)
   }
 }
 
@@ -665,7 +615,7 @@ struct WorkspaceControls: View {
     }
     if let goBack {
       if #available(macOS 26, *) {
-        GlassBackButton(action: goBack)
+        GlassIconButton(symbol: "chevron.left", title: "Back", action: goBack)
       } else {
         Button(action: goBack) { Image(systemName: "chevron.left").frame(width: 30, height: 30) }
           .buttonStyle(.borderless)

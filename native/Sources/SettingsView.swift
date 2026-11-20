@@ -51,27 +51,20 @@ struct SettingsView: View {
 
   var body: some View {
     let _ = locale
-    Group {
-      if let workspaceControls {
-        VStack(spacing: 0) {
-          WorkspaceHeader(sidebarHidden: workspaceControls.showSidebar != nil) {
-            workspaceControls
-            Spacer(minLength: 0)
-            ViewThatFits(in: .horizontal) {
-              SettingsTabPicker(verticalPad: 0)
-              SettingsTabPicker(verticalPad: 0).labelStyle(.iconOnly)
-            }
-            Spacer(minLength: 0)
-            doneButton(inWorkspace: true)
-          }
-          .zIndex(1)
-          settingsPage
+    VStack(spacing: 0) {
+      WorkspaceHeader(sidebarHidden: workspaceControls?.showSidebar != nil) {
+        if let workspaceControls {
+          workspaceControls
+        } else {
+          Color.clear.frame(width: 36).accessibilityHidden(true)
         }
-      } else {
-        settingsPage
-          .modifier(ClearSettingsToolbar())
-          .toolbar { settingsDone }
+        Spacer(minLength: 0)
+        SettingsTabPicker()
+        Spacer(minLength: 0)
+        doneButton
       }
+      .zIndex(1)
+      settingsPage
     }
     .background {
       AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea()
@@ -93,27 +86,17 @@ struct SettingsView: View {
     guard draft.load(store.state?.settings) else { return }
     strictModeEnabled = store.state?.settings.strict_mode == true
   }
-  @ToolbarContentBuilder private var settingsDone: some ToolbarContent {
-    if #available(macOS 26, *) {
-      ToolbarItem(placement: .primaryAction) {
-        doneButton(inWorkspace: false)
-      }
-      .sharedBackgroundVisibility(.hidden)
-    } else {
-      ToolbarItem(placement: .primaryAction) {
-        doneButton(inWorkspace: false)
-      }
-    }
-  }
-  @ViewBuilder private func doneButton(inWorkspace: Bool) -> some View {
+  @ViewBuilder private var doneButton: some View {
     let enabled = draft.canSave(busy: store.busy)
     if #available(macOS 26, *) {
-      GlassTextButton(
-        title: "Done", enabled: enabled, leadingPad: inWorkspace ? 0 : 28,
-        trailingPad: inWorkspace ? 0 : 8, verticalPad: inWorkspace ? 0 : 28,
-        action: finishSettings)
+      GlassIconButton(symbol: "checkmark", title: "Done", action: finishSettings)
+        .disabled(!enabled)
     } else {
-      Button("Done", action: finishSettings).disabled(!enabled)
+      Button(action: finishSettings) {
+        Label("Done", systemImage: "checkmark").labelStyle(.iconOnly)
+      }
+      .help("Done")
+      .disabled(!enabled)
     }
   }
   private var settingsPage: some View {
@@ -131,18 +114,6 @@ struct SettingsView: View {
     .frame(maxWidth: 760)
     .padding(.horizontal, 10)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-  }
-}
-
-/// Keeps the title bar translucent, while TabView stays outside a scroll view so its tabs
-/// stay beside the page title.
-private struct ClearSettingsToolbar: ViewModifier {
-  @ViewBuilder func body(content: Content) -> some View {
-    if #available(macOS 15, *) {
-      content.toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
-    } else {
-      content
-    }
   }
 }
 
