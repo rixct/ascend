@@ -65,10 +65,10 @@ struct SettingsView: View {
             doneButton(inWorkspace: true)
           }
           .zIndex(1)
-          settingsCard
+          settingsPage
         }
       } else {
-        settingsCard
+        settingsPage
           .modifier(ClearSettingsToolbar())
           .toolbar { settingsDone }
       }
@@ -116,22 +116,19 @@ struct SettingsView: View {
       Button("Done", action: finishSettings).disabled(!enabled)
     }
   }
-  private var settingsCard: some View {
-    Surface(padding: 0, fillHeight: true) {
-      Group {
-        switch store.settingsTab {
-        case .general: GeneralSettings(draft: draft)
-        case .notifications: NotificationSettings()
-        case .shortcuts: ShortcutSettings()
-        case .data: DataSettings()
-        case .rules: RulesSettings()
-        }
+  private var settingsPage: some View {
+    Group {
+      switch store.settingsTab {
+      case .general: GeneralSettings(draft: draft)
+      case .notifications: NotificationSettings()
+      case .shortcuts: ShortcutSettings()
+      case .data: DataSettings()
+      case .rules: RulesSettings()
       }
-      .id(store.settingsTab)
-      .animation(nil, value: store.settingsTab)
-      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
-    .padding(24)
+    .id(store.settingsTab)
+    .animation(nil, value: store.settingsTab)
+    .frame(maxWidth: 880)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 }
@@ -446,19 +443,13 @@ private final class FlatTextField: NSTextField {
 }
 
 struct SettingsGroup<Content: View>: View {
-  @Environment(\.colorScheme) private var scheme
   @ViewBuilder let content: () -> Content
   var body: some View {
     VStack(alignment: .leading, spacing: 0) { content() }
-      .padding(16)
+      .padding(.bottom, 14)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-          .fill(scheme == .dark ? Color.white.opacity(0.045) : Color.black.opacity(0.035))
-      }
-      .overlay {
-        RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(
-          scheme == .dark ? Color.white.opacity(0.07) : Color.black.opacity(0.06), lineWidth: 1)
+      .overlay(alignment: .bottom) {
+        RowDivider().allowsHitTesting(false)
       }
   }
 }

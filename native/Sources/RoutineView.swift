@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct DailyRoutineCard: View {
+struct DailyRoutineView: View {
   @EnvironmentObject private var store: Store
   @Environment(\.locale) private var locale
   let summary: Summary
@@ -14,8 +14,8 @@ struct DailyRoutineCard: View {
   private var checked: Int { items.filter(\.completed).count }
   var body: some View {
     let _ = locale
-    SectionCard(
-      title: "Daily routine", fillHeight: true,
+    CanvasSection(
+      title: "Daily routine",
       detail: items.isEmpty ? nil : L("%d of %d", checked, items.count),
       accessory: AnyView(addButton)
     ) {
@@ -55,7 +55,7 @@ struct DailyRoutineCard: View {
           }
         }
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+      .frame(maxWidth: .infinity, alignment: .topLeading)
       .confirmationDialog(
         Text(pendingDelete.map { L("Remove %@ from the routine?", $0.title) } ?? ""),
         isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),

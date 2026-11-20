@@ -601,13 +601,7 @@ struct RootView: View {
         if page != .settings {
           WorkspaceHeader(sidebarHidden: !sidebarVisible) {
             controls(for: page)
-            Text(
-              LocalizedStringKey(
-                page == .skillTree && store.questTreeSkill != nil ? "Quest tree" : page.rawValue)
-            )
-              .font(.system(size: 17, weight: .semibold))
-              .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 12)
+            Spacer(minLength: 0)
             WindowToolbar()
           }
           .zIndex(1)

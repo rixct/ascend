@@ -50,25 +50,24 @@ struct SkillTreeView: View {
   }
   private var overallTree: some View {
     PageFrame {
-      VStack(spacing: 16) {
+      Group {
         if state.skills.isEmpty {
-          Surface(fillHeight: true) {
-            EmptyState(
-              symbol: "point.3.connected.trianglepath.dotted", title: "Your skill tree starts here",
-              message: "Add a skill, then connect new skills through prerequisites.",
-              buttonTitle: "Add a skill"
-            ) { store.sheet = .skill }
-          }
+          EmptyState(
+            symbol: "point.3.connected.trianglepath.dotted", title: "Your skill tree starts here",
+            message: "Add a skill, then connect new skills through prerequisites.",
+            buttonTitle: "Add a skill"
+          ) { store.sheet = .skill }
         } else {
-          HStack(alignment: .top, spacing: 16) {
-            Surface(padding: 0, fillHeight: true) { graph }
-              .clipShape(RoundedRectangle(cornerRadius: 16))
-            Surface(padding: 0, fillHeight: true) { inspector }
-              .frame(width: 280)
+          HStack(alignment: .top, spacing: 0) {
+            graph
+            Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
+            inspector.frame(width: 280)
           }
         }
       }
-      .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding(.horizontal, 20)
+      .padding(.bottom, 16)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
   }
   private func rebuild() {

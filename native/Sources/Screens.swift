@@ -10,20 +10,18 @@ struct Metric: View {
   var color: Color = AppStyle.accent
   var body: some View {
     let _ = locale
-    Surface(padding: 16) {
-      VStack(alignment: .leading, spacing: 12) {
-        HStack {
-          Text(L(title)).font(.system(size: 12, weight: .medium)).foregroundStyle(Color.secondary)
-          Spacer(minLength: 6)
-          Image(systemName: symbol).font(.system(size: 12, weight: .medium)).foregroundStyle(color)
-            .frame(width: 24, height: 24).background(
-              color.opacity(0.09), in: RoundedRectangle(cornerRadius: 9))
-        }
-        Text(L(value)).font(.system(size: 26, weight: .semibold, design: .rounded))
-          .monospacedDigit()
-          .lineLimit(1).minimumScaleFactor(0.7)
+    VStack(alignment: .leading, spacing: 8) {
+      Label {
+        Text(L(title)).foregroundStyle(.secondary)
+      } icon: {
+        Image(systemName: symbol).foregroundStyle(color)
       }
+      .font(.system(size: 12, weight: .medium))
+      Text(L(value)).font(.system(size: 26, weight: .semibold, design: .rounded))
+        .monospacedDigit()
+        .lineLimit(1).minimumScaleFactor(0.7)
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
@@ -34,31 +32,37 @@ struct DashboardView: View {
   let summary: Summary
   var body: some View {
     let _ = locale
-    ScreenLayout {
-      HStack(spacing: 14) {
-        Metric(
-          title: "Practice today",
-          value:
-            L(
+    GeometryReader { viewport in
+      let sideBySide = viewport.size.width >= (state.active == nil ? 720 : 1050)
+      let layout = sideBySide
+        ? AnyLayout(HStackLayout(alignment: .top, spacing: 32))
+        : AnyLayout(VStackLayout(alignment: .leading, spacing: 28))
+      ScreenLayout {
+        HStack(spacing: 32) {
+          Metric(
+            title: "Practice today",
+            value: L(
               "%d min",
               state.sessions.filter { $0.day == summary.today }.reduce(0) { $0 + $1.seconds } / 60),
-          symbol: "clock", color: AppStyle.blue)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Metric(
-          title: "Discipline",
-          value: summary.discipline.map {
-            (summary.preliminary ? "≈" : "") + String(Int($0.rounded()))
-          } ?? "—", symbol: "checkmark.seal", color: AppStyle.mint)
-          .frame(maxWidth: .infinity, alignment: .leading)
+            symbol: "clock", color: AppStyle.blue)
+          Metric(
+            title: "Discipline",
+            value: summary.discipline.map {
+              (summary.preliminary ? "≈" : "") + String(Int($0.rounded()))
+            } ?? "—", symbol: "checkmark.seal", color: AppStyle.mint)
+        }
+        RowDivider()
+        layout {
+          CanvasSection(title: "Practice") {
+            if state.active != nil {
+              Surface(padding: 18) { TimerView(state: state, summary: summary) }
+            } else {
+              TimerView(state: state, summary: summary)
+            }
+          }
+          DailyRoutineView(summary: summary)
+        }
       }
-      HStack(alignment: .top, spacing: 20) {
-        SectionCard(title: "Practice", fillHeight: true) {
-          TimerView(state: state, summary: summary).frame(
-            maxHeight: .infinity, alignment: .topLeading)
-        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        DailyRoutineCard(summary: summary)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      }.fixedSize(horizontal: false, vertical: true)
     }
   }
 }
@@ -329,10 +333,10 @@ struct CharacterView: View {
   var body: some View {
     let _ = locale
     PageFrame {
-      Surface(padding: 0, fillHeight: true) {
-        GeometryReader { geo in
-          let total = geo.size.width
-          let gap: CGFloat = 9
+      GeometryReader { geo in
+        let total = geo.size.width
+        let gap: CGFloat = 9
+        if total >= ProfileColumn.minPane + gap + ProfileColumn.minChart {
           let left = leftWidth(total: total, gap: gap)
           HStack(spacing: 0) {
             profile.frame(width: left)
@@ -341,14 +345,17 @@ struct CharacterView: View {
           }
           .coordinateSpace(name: "character-split")
           .frame(width: total, height: geo.size.height, alignment: .leading)
+        } else {
+          ScrollView {
+            VStack(spacing: 0) {
+              profile
+              RowDivider().padding(.horizontal, ProfileColumn.padding)
+              attributes.frame(height: 360)
+            }
+          }
         }
       }
-      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .padding(24)
-      .frame(
-        minWidth: ProfileColumn.minPane + 9 + ProfileColumn.minChart,
-        maxWidth: .infinity, minHeight: 540, maxHeight: .infinity, alignment: .top
-      )
+      .frame(minHeight: 480)
     }
   }
   private var profile: some View {
@@ -608,15 +615,13 @@ struct SkillsView: View {
     PageFrame {
       Group {
         if state.skills.isEmpty {
-          Surface {
-            EmptyState(
-              symbol: "point.3.connected.trianglepath.dotted",
-              title: "What would you like to get better at?",
-              message:
-                "Add a skill you want to develop. Your practice and milestones will grow from there.",
-              buttonTitle: "Add a skill"
-            ) { store.sheet = .skill }
-          }
+          EmptyState(
+            symbol: "point.3.connected.trianglepath.dotted",
+            title: "What would you like to get better at?",
+            message:
+              "Add a skill you want to develop. Your practice and milestones will grow from there.",
+            buttonTitle: "Add a skill"
+          ) { store.sheet = .skill }
         } else {
           skillsSplit
         }
@@ -642,113 +647,112 @@ struct SkillsView: View {
     }
   }
   private var skillsSplit: some View {
-    Surface(padding: 0) {
-      HStack(spacing: 0) {
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 4) {
-            ForEach(state.skills) { skill in skillRow(skill) }
-          }
-          .padding(12)
-          .frame(maxWidth: .infinity, alignment: .leading)
+    HStack(spacing: 0) {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 4) {
+          ForEach(state.skills) { skill in skillRow(skill) }
         }
-        .frame(width: 280)
-        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
-        if let skill = state.skills.first(where: { $0.id == selected }) ?? state.skills.first {
-          ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-              Surface {
-                VStack(alignment: .leading, spacing: 18) {
-                  HStack {
-                    Text(skill.displayTitle).font(.system(size: 23, weight: .semibold))
-                    Spacer()
-                    PencilButton(label: "Edit skill") { store.sheet = .editSkill(skill.id) }
-                      .disabled(store.busy)
-                    if !summary.unlocked_skills.contains(skill.id) {
-                      StatusPill(title: "Locked", color: .secondary, symbol: "lock.fill")
-                    }
-                  }
-                  HStack(spacing: 28) {
-                    VStack(alignment: .leading, spacing: 5) {
-                      Text("Experience").font(.system(size: 11)).foregroundStyle(Color.secondary)
-                      Text("\(number(Double(skill.xp_milli) / 1000)) XP").font(
-                        .system(size: 21, weight: .semibold, design: .rounded))
-                    }
-                    VStack(alignment: .leading, spacing: 5) {
-                      Text("Verified milestones").font(.system(size: 11)).foregroundStyle(
-                        Color.secondary)
-                      Text("\(skill.mastery)").font(
-                        .system(size: 21, weight: .semibold, design: .rounded))
-                    }
-                  }
-                  if !skill.prerequisites.isEmpty {
-                    Label(
-                      skill.prerequisites.map { state.skill($0) }.joined(separator: ", "),
-                      systemImage: "arrow.turn.down.right"
-                    ).font(.system(size: 12)).foregroundStyle(Color.secondary)
-                  }
-                  Text(FocusList.summary(skill))
-                  .font(.system(size: 12)).foregroundStyle(Color.secondary).fixedSize(
-                    horizontal: false, vertical: true)
-                  HStack(spacing: 8) {
-                    Button("Verify mastery…") { store.sheet = .mastery(skill.id) }.buttonStyle(
-                      .borderedProminent
-                    ).controlSize(.large).disabled(!state.canVerifySkill(skill.id, summary: summary))
-                    if !state.skillQuestsCompleted(skill.id) {
-                      HintButton(text: "Complete all quests to verify this skill.")
-                    }
+        .padding(.trailing, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .frame(width: 248)
+      Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
+      if let skill = state.skills.first(where: { $0.id == selected }) ?? state.skills.first {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 18) {
+              HStack {
+                Text(skill.displayTitle).font(.system(size: 23, weight: .semibold))
+                Spacer()
+                PencilButton(label: "Edit skill") { store.sheet = .editSkill(skill.id) }
+                  .disabled(store.busy)
+                if !summary.unlocked_skills.contains(skill.id) {
+                  StatusPill(title: "Locked", color: .secondary, symbol: "lock.fill")
+                }
+              }
+              HStack(spacing: 28) {
+                VStack(alignment: .leading, spacing: 5) {
+                  Text("Experience").font(.system(size: 11)).foregroundStyle(Color.secondary)
+                  Text("\(number(Double(skill.xp_milli) / 1000)) XP").font(
+                    .system(size: 21, weight: .semibold, design: .rounded))
+                }
+                VStack(alignment: .leading, spacing: 5) {
+                  Text("Verified milestones").font(.system(size: 11)).foregroundStyle(
+                    Color.secondary)
+                  Text("\(skill.mastery)").font(
+                    .system(size: 21, weight: .semibold, design: .rounded))
+                }
+              }
+              if !skill.prerequisites.isEmpty {
+                Label(
+                  skill.prerequisites.map { state.skill($0) }.joined(separator: ", "),
+                  systemImage: "arrow.turn.down.right"
+                ).font(.system(size: 12)).foregroundStyle(Color.secondary)
+              }
+              Text(FocusList.summary(skill))
+                .font(.system(size: 12)).foregroundStyle(Color.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+              HStack(spacing: 8) {
+                Button("Verify mastery…") { store.sheet = .mastery(skill.id) }.buttonStyle(
+                  .borderedProminent
+                ).controlSize(.large).disabled(!state.canVerifySkill(skill.id, summary: summary))
+                if !state.skillQuestsCompleted(skill.id) {
+                  HintButton(text: "Complete all quests to verify this skill.")
+                }
+              }
+            }
+            RowDivider()
+            CanvasSection(title: "Verified outcomes") {
+              if skill.evidence.isEmpty {
+                EmptyState(
+                  symbol: "checkmark.seal", title: "Let your work speak",
+                  message: "Verified outcomes will appear here as your skill develops.",
+                  compact: true)
+              } else {
+                ForEach(Array(skill.evidence.enumerated()), id: \.offset) { _, text in
+                  Label {
+                    Text(text).font(.system(size: 13)).textSelection(.enabled)
+                  } icon: {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(AppStyle.mint)
                   }
                 }
               }
-              SectionCard(title: "Verified outcomes") {
-                if skill.evidence.isEmpty {
-                  EmptyState(
-                    symbol: "checkmark.seal", title: "Let your work speak",
-                    message: "Verified outcomes will appear here as your skill develops.",
-                    compact: true)
-                } else {
-                  ForEach(Array(skill.evidence.enumerated()), id: \.offset) { _, text in
-                    Label {
-                      Text(text).font(.system(size: 13)).textSelection(.enabled)
-                    } icon: {
-                      Image(systemName: "checkmark.circle.fill").foregroundStyle(AppStyle.mint)
-                    }
-                  }
-                }
-              }
-              SectionCard(title: "Recent practice") {
-                let sessions = Array(
-                  state.sessions.filter { $0.skill_id == skill.id }.suffix(8).reversed())
-                if sessions.isEmpty {
-                  EmptyState(
-                    symbol: "clock", title: "Your first session is ahead",
-                    message: "Practice linked to this skill will appear here.", compact: true)
-                } else {
-                  VStack(spacing: 14) {
-                    ForEach(sessions) { session in
-                      HStack {
-                        Text(dateText(session.day)).font(.system(size: 13))
-                        Spacer()
-                        Text(L("%@ min", number(Double(session.seconds) / 60))).font(
-                          .system(size: 12)
-                        )
-                        .foregroundStyle(Color.secondary)
-                        Text("+\(number(Double(session.reward_milli) / 1000)) XP").font(
-                          .system(size: 12, weight: .medium)
-                        ).foregroundStyle(AppStyle.accent).frame(width: 70, alignment: .trailing)
-                      }
+            }
+            RowDivider()
+            CanvasSection(title: "Recent practice") {
+              let sessions = Array(
+                state.sessions.filter { $0.skill_id == skill.id }.suffix(8).reversed())
+              if sessions.isEmpty {
+                EmptyState(
+                  symbol: "clock", title: "Your first session is ahead",
+                  message: "Practice linked to this skill will appear here.", compact: true)
+              } else {
+                VStack(spacing: 14) {
+                  ForEach(sessions) { session in
+                    HStack {
+                      Text(dateText(session.day)).font(.system(size: 13))
+                      Spacer()
+                      Text(L("%@ min", number(Double(session.seconds) / 60))).font(
+                        .system(size: 12)
+                      )
+                      .foregroundStyle(Color.secondary)
+                      Text("+\(number(Double(session.reward_milli) / 1000)) XP").font(
+                        .system(size: 12, weight: .medium)
+                      ).foregroundStyle(AppStyle.accent).frame(width: 70, alignment: .trailing)
                     }
                   }
                 }
               }
             }
-            .padding(22)
-            .frame(maxWidth: .infinity, alignment: .leading)
           }
+          .frame(maxWidth: 720, alignment: .leading)
+          .padding(.leading, 22)
+          .padding(.bottom, 24)
+          .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
-    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
   private func skillRow(_ skill: Skill) -> some View {
     let open = selected == skill.id
@@ -869,13 +873,11 @@ struct QuestsView: View {
     PageFrame {
       Group {
         if state.quests.isEmpty {
-          Surface {
-            EmptyState(
-              symbol: "checklist", title: "One clear next step",
-              message: "Turn something you want to do into a quest with a clear outcome.",
-              buttonTitle: "Create a quest"
-            ) { store.sheet = .quest }
-          }
+          EmptyState(
+            symbol: "checklist", title: "One clear next step",
+            message: "Turn something you want to do into a quest with a clear outcome.",
+            buttonTitle: "Create a quest"
+          ) { store.sheet = .quest }
         } else {
           questSplit
         }
@@ -890,143 +892,142 @@ struct QuestsView: View {
   }
   private var questSplit: some View {
     let practice = QuestPractice.totals(state.sessions)
-    return Surface(padding: 0) {
-      HStack(spacing: 0) {
-        VStack(spacing: 0) {
-          VStack(spacing: 10) {
-            Picker("", selection: $filter) {
-              Text("Active").tag(0)
-              Text("Closed").tag(1)
-              Text("All").tag(2)
-            }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Quest status")
-            HStack(spacing: 7) {
-              Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
-              TextField("Search quests", text: $search).textFieldStyle(.plain)
-            }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
-              Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8))
-          }.padding(12)
-          RowDivider()
-          if quests.isEmpty {
-            EmptyState(
-              symbol: search.isEmpty ? "checklist" : "magnifyingglass",
-              title: search.isEmpty
-                ? (filter == 1 ? "Nothing closed out yet" : "One clear next step")
-                : "No matching quests",
-              message: search.isEmpty
-                ? (filter == 1
-                  ? "Completed and cancelled quests will be kept here."
-                  : "Turn something you want to do into a quest with a clear outcome.")
-                : "Try a different search or browse all your quests.",
-              buttonTitle: search.isEmpty ? (filter == 1 ? nil : "Create a quest") : "Clear search"
-            ) {
-              if search.isEmpty {
-                store.sheet = .quest
-              } else {
-                search = ""
-                filter = 2
-              }
-            }
-          } else {
-            ScrollView {
-              LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(quests) { quest in questRow(quest) }
-              }
-              .padding(12)
-              .frame(maxWidth: .infinity, alignment: .leading)
+    return HStack(spacing: 0) {
+      VStack(spacing: 0) {
+        VStack(spacing: 10) {
+          Picker("", selection: $filter) {
+            Text("Active").tag(0)
+            Text("Closed").tag(1)
+            Text("All").tag(2)
+          }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Quest status")
+          HStack(spacing: 7) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
+            TextField("Search quests", text: $search).textFieldStyle(.plain)
+          }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
+            Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8))
+        }
+        .padding(.trailing, 14)
+        .padding(.bottom, 12)
+        RowDivider()
+        if quests.isEmpty {
+          EmptyState(
+            symbol: search.isEmpty ? "checklist" : "magnifyingglass",
+            title: search.isEmpty
+              ? (filter == 1 ? "Nothing closed out yet" : "One clear next step")
+              : "No matching quests",
+            message: search.isEmpty
+              ? (filter == 1
+                ? "Completed and cancelled quests will be kept here."
+                : "Turn something you want to do into a quest with a clear outcome.")
+              : "Try a different search or browse all your quests.",
+            buttonTitle: search.isEmpty ? (filter == 1 ? nil : "Create a quest") : "Clear search"
+          ) {
+            if search.isEmpty {
+              store.sheet = .quest
+            } else {
+              search = ""
+              filter = 2
             }
           }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
-        Group {
-          if let quest = quests.first(where: { $0.id == selected }) ?? quests.first {
-            questDetail(quest, practice: practice)
+        } else {
+          ScrollView {
+            LazyVStack(alignment: .leading, spacing: 4) {
+              ForEach(quests) { quest in questRow(quest) }
+            }
+            .padding(.vertical, 8)
+            .padding(.trailing, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      }
+      .frame(width: 238)
+      .frame(maxHeight: .infinity, alignment: .top)
+      Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
+      Group {
+        if let quest = quests.first(where: { $0.id == selected }) ?? quests.first {
+          questDetail(quest, practice: practice)
+        }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
-    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
   private func questDetail(_ quest: Quest, practice: [String: QuestPractice]) -> some View {
     let saved = practice[quest.id] ?? QuestPractice()
     return ScrollView {
-      VStack(alignment: .leading, spacing: 22) {
-        Surface {
-          VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .firstTextBaseline) {
-              Text(quest.title).font(.system(size: 23, weight: .semibold)).fixedSize(
-                horizontal: false, vertical: true)
-              Spacer(minLength: 12)
-              PencilButton(label: "Edit quest") { store.sheet = .editQuest(quest.id) }
-                .disabled(store.busy)
-              StatusPill(
-                title: summary.unlocked_quests.contains(quest.id) ? quest.statusName : "Locked",
-                color: quest.status == "Completed"
-                  ? AppStyle.mint : quest.status == "Active" ? AppStyle.accent : .secondary)
+      VStack(alignment: .leading, spacing: 18) {
+        HStack(alignment: .firstTextBaseline) {
+          Text(quest.title).font(.system(size: 23, weight: .semibold)).fixedSize(
+            horizontal: false, vertical: true)
+          Spacer(minLength: 12)
+          PencilButton(label: "Edit quest") { store.sheet = .editQuest(quest.id) }
+            .disabled(store.busy)
+          StatusPill(
+            title: summary.unlocked_quests.contains(quest.id) ? quest.statusName : "Locked",
+            color: quest.status == "Completed"
+              ? AppStyle.mint : quest.status == "Active" ? AppStyle.accent : .secondary)
+        }
+        if !quest.outcome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          Text(quest.outcome).font(.system(size: 13)).foregroundStyle(Color.secondary)
+            .lineSpacing(3).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        }
+        LazyVGrid(
+          columns: [
+            GridItem(.flexible(), alignment: .leading),
+            GridItem(.flexible(), alignment: .leading),
+          ], alignment: .leading, spacing: 16
+        ) {
+          detailMetric("Skill", state.skill(quest.skill_id))
+          detailMetric("How it repeats", quest.kindName)
+          detailMetric("Time", L("%d min", quest.estimate_minutes))
+          if quest.kind == "Habit" {
+            detailMetric("Days to establish", "\(quest.sessionTarget)")
+          } else {
+            detailMetric("Sessions", "\(saved.sessions) / \(quest.sessionTarget)")
+          }
+        }
+        if quest.kind != "Habit" {
+          Text(L("%@ min total", number(Double(saved.seconds) / 60)))
+            .font(.system(size: 12)).foregroundStyle(.secondary)
+          ProgressTrack(
+            value: min(100, Double(saved.sessions) / Double(max(1, quest.sessionTarget)) * 100))
+        }
+        HStack(spacing: 10) {
+          if let deadline = quest.deadline {
+            Label(dateText(deadline), systemImage: "calendar").font(.system(size: 12))
+              .foregroundStyle(Color.secondary)
+          }
+          Spacer()
+          if store.available(quest) {
+            if !store.strictLogging {
+              Button("Log time…") { store.finish(quest) }.controlSize(.large).disabled(
+                !store.canStart)
             }
-            if !quest.outcome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-              Text(quest.outcome).font(.system(size: 13)).foregroundStyle(Color.secondary)
-                .lineSpacing(3).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-            }
-            LazyVGrid(
-              columns: [
-                GridItem(.flexible(), alignment: .leading),
-                GridItem(.flexible(), alignment: .leading),
-              ], alignment: .leading, spacing: 16
-            ) {
-              detailMetric("Skill", state.skill(quest.skill_id))
-              detailMetric("How it repeats", quest.kindName)
-              detailMetric("Time", L("%d min", quest.estimate_minutes))
-              if quest.kind == "Habit" {
-                detailMetric("Days to establish", "\(quest.sessionTarget)")
-              } else {
-                detailMetric("Sessions", "\(saved.sessions) / \(quest.sessionTarget)")
+            Button {
+              store.startSession(quest.id)
+            } label: {
+              Label("Start session", systemImage: "play.fill")
+            }.buttonStyle(.borderedProminent).controlSize(.large).disabled(!store.canStart)
+          }
+          if !quest.closed {
+            Menu {
+              Button(L(quest.status == "Paused" ? "Return to plan" : "Pause quest")) {
+                store.send(
+                  "status",
+                  ["id": quest.id, "status": quest.status == "Paused" ? "Planned" : "Paused"])
               }
-            }
-            if quest.kind != "Habit" {
-              Text(L("%@ min total", number(Double(saved.seconds) / 60)))
-                .font(.system(size: 12)).foregroundStyle(.secondary)
-              ProgressTrack(
-                value: min(100, Double(saved.sessions) / Double(max(1, quest.sessionTarget)) * 100))
-            }
-            HStack(spacing: 10) {
-              if let deadline = quest.deadline {
-                Label(dateText(deadline), systemImage: "calendar").font(.system(size: 12))
-                  .foregroundStyle(Color.secondary)
+              Button("Cancel quest", role: .destructive) {
+                store.send("status", ["id": quest.id, "status": "Cancelled"])
               }
-              Spacer()
-              if store.available(quest) {
-                if !store.strictLogging {
-                  Button("Log time…") { store.finish(quest) }.controlSize(.large).disabled(
-                    !store.canStart)
-                }
-                Button {
-                  store.startSession(quest.id)
-                } label: {
-                  Label("Start session", systemImage: "play.fill")
-                }.buttonStyle(.borderedProminent).controlSize(.large).disabled(!store.canStart)
-              }
-              if !quest.closed {
-                Menu {
-                  Button(L(quest.status == "Paused" ? "Return to plan" : "Pause quest")) {
-                    store.send(
-                      "status",
-                      ["id": quest.id, "status": quest.status == "Paused" ? "Planned" : "Paused"])
-                  }
-                  Button("Cancel quest", role: .destructive) {
-                    store.send("status", ["id": quest.id, "status": "Cancelled"])
-                  }
-                } label: {
-                  Image(systemName: "ellipsis")
-                }.fixedSize().controlSize(.large)
-              }
-            }
+            } label: {
+              Image(systemName: "ellipsis")
+            }.fixedSize().controlSize(.large)
           }
         }
       }
-      .padding(22)
+      .frame(maxWidth: 720, alignment: .leading)
+      .padding(.leading, 22)
+      .padding(.bottom, 24)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
@@ -1118,35 +1119,34 @@ struct BalanceView: View {
   var body: some View {
     let _ = locale
     ScreenLayout {
-      Surface {
-        HStack(spacing: 18) {
-          Image(systemName: "leaf").font(.system(size: 24, weight: .light)).foregroundStyle(
-            AppStyle.mint
-          ).frame(width: 52, height: 52).background(
-            AppStyle.mint.opacity(0.09), in: RoundedRectangle(cornerRadius: 15))
-          VStack(alignment: .leading, spacing: 6) {
-            Text("Suggested workload").font(.system(size: 11)).foregroundStyle(Color.secondary)
-            Text(englishText(summary.recommendation)).font(.system(size: 17, weight: .semibold))
+      HStack(spacing: 18) {
+        Image(systemName: "leaf").font(.system(size: 24, weight: .light)).foregroundStyle(
+          AppStyle.mint
+        ).frame(width: 52, height: 52).background(
+          AppStyle.mint.opacity(0.09), in: RoundedRectangle(cornerRadius: 15))
+        VStack(alignment: .leading, spacing: 6) {
+          Text("Suggested workload").font(.system(size: 11)).foregroundStyle(Color.secondary)
+          Text(englishText(summary.recommendation)).font(.system(size: 17, weight: .semibold))
+        }
+        Spacer()
+        Text("\(summary.suggested_minutes)").font(
+          .system(size: 29, weight: .semibold, design: .rounded)
+        ).monospacedDigit() + Text(L(" min")).font(.system(size: 13)).foregroundColor(.secondary)
+      }.padding(.trailing, 28)
+        .overlay(alignment: .topTrailing) {
+          Button {
+            explanation.toggle()
+          } label: {
+            Image(systemName: "info.circle").foregroundStyle(Color.secondary)
+          }.buttonStyle(.plain).help("About your rhythm").popover(isPresented: $explanation) {
+            Text(englishText(summary.recommendation_detail)).font(.system(size: 13)).lineSpacing(
+              4
+            )
+            .frame(width: 330).padding(22)
           }
-          Spacer()
-          Text("\(summary.suggested_minutes)").font(
-            .system(size: 29, weight: .semibold, design: .rounded)
-          ).monospacedDigit() + Text(L(" min")).font(.system(size: 13)).foregroundColor(.secondary)
-        }.padding(.trailing, 28)
-          .overlay(alignment: .topTrailing) {
-            Button {
-              explanation.toggle()
-            } label: {
-              Image(systemName: "info.circle").foregroundStyle(Color.secondary)
-            }.buttonStyle(.plain).help("About your rhythm").popover(isPresented: $explanation) {
-              Text(englishText(summary.recommendation_detail)).font(.system(size: 13)).lineSpacing(
-                4
-              )
-              .frame(width: 330).padding(22)
-            }
-          }
-      }
-      SectionCard(
+        }
+      RowDivider()
+      CanvasSection(
         title: "This week", detail: summary.balance.map { L("%d%% complete", Int($0.rounded())) }
       ) {
         if targets.isEmpty {
@@ -1159,7 +1159,8 @@ struct BalanceView: View {
           VStack(spacing: 22) { ForEach(targets) { target in targetRow(target) } }
         }
       }
-      SectionCard(
+      RowDivider()
+      CanvasSection(
         title: "Today's check-in",
         actionTitle: state.checkins.contains(where: { $0.day == summary.today }) ? "Update…" : nil,
         pencil: true,
@@ -1180,7 +1181,8 @@ struct BalanceView: View {
         }
       }
       if state.targets.contains(where: { $0.week > summary.week }) {
-        SectionCard(title: "Next week") {
+        RowDivider()
+        CanvasSection(title: "Next week") {
           VStack(spacing: 22) {
             ForEach(state.targets.filter { $0.week > summary.week }) { target in targetRow(target) }
           }
@@ -1280,7 +1282,6 @@ struct AnalyticsView: View {
     let _ = locale
     ScreenLayout {
       HStack(spacing: 10) {
-        Text("Your progress").font(.system(size: 23, weight: .semibold))
         Spacer(minLength: 12)
         Button {
           page += 1
@@ -1321,7 +1322,8 @@ struct AnalyticsView: View {
           title: "Active days", value: "\(days.filter { $0.minutes > 0 }.count)",
           symbol: "calendar.badge.checkmark", color: AppStyle.mint)
       }
-      SectionCard(title: "Practice", detail: "Minutes per day") {
+      RowDivider()
+      CanvasSection(title: "Practice", detail: "Minutes per day") {
         if minutes > 0 {
           PracticeChart(days: days).frame(height: 190)
         } else {
@@ -1330,7 +1332,8 @@ struct AnalyticsView: View {
             message: "Nothing was logged in this period.", compact: true)
         }
       }
-      SectionCard(title: "Discipline", detail: "28-day rolling index") {
+      RowDivider()
+      CanvasSection(title: "Discipline", detail: "28-day rolling index") {
         if days.contains(where: { $0.discipline != nil }) {
           Chart(days.filter { $0.discipline != nil }) { day in
             LineMark(x: .value("Day", chartDate(day.day)), y: .value("Index", day.discipline!))
@@ -1355,7 +1358,8 @@ struct AnalyticsView: View {
           )
         }
       }
-      SectionCard(title: "Time by skill") {
+      RowDivider()
+      CanvasSection(title: "Time by skill") {
         if minutes == 0 {
           EmptyState(
             symbol: "circle.hexagongrid", title: "Nothing to compare just yet",
@@ -1406,26 +1410,23 @@ struct JournalView: View {
     let _ = locale
     PageFrame {
       VStack(alignment: .leading, spacing: 0) {
-        Surface(padding: 0) {
-          VStack(spacing: 0) {
-            HStack(spacing: 16) {
-              Picker("", selection: $tab) {
-                Text("Entries").tag(0)
-                Text("Activity").tag(1)
-              }.pickerStyle(.segmented).labelsHidden().frame(width: 240, alignment: .leading)
-                .accessibilityLabel("Journal filter")
-              Spacer(minLength: 12)
-              HStack(spacing: 7) {
-                Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
-                TextField("Search journal", text: $search).textFieldStyle(.plain)
-              }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
-                Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8)
-              ).frame(width: 210)
-            }.padding(18)
-            RowDivider()
-            journalBody
-          }
-        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        HStack(spacing: 16) {
+          Picker("", selection: $tab) {
+            Text("Entries").tag(0)
+            Text("Activity").tag(1)
+          }.pickerStyle(.segmented).labelsHidden().frame(width: 240, alignment: .leading)
+            .accessibilityLabel("Journal filter")
+          Spacer(minLength: 12)
+          HStack(spacing: 7) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
+            TextField("Search journal", text: $search).textFieldStyle(.plain)
+          }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
+            Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8)
+          ).frame(width: 210)
+        }
+        .padding(.bottom, 14)
+        RowDivider()
+        journalBody
       }.padding(24)
     }
   }
@@ -1449,7 +1450,7 @@ struct JournalView: View {
                   Color.secondary)
                 Text(entry.text).font(.system(size: 13)).lineSpacing(4).textSelection(.enabled)
                   .frame(maxWidth: .infinity, alignment: .leading)
-              }.padding(.horizontal, 18).padding(.vertical, 14)
+              }.padding(.vertical, 14)
               RowDivider()
             }
           }
@@ -1478,7 +1479,7 @@ struct JournalView: View {
                 Spacer()
                 Text(dateText(event.at)).foregroundStyle(Color.secondary).font(.system(size: 11))
               }
-            }.padding(.horizontal, 18).padding(.vertical, 12)
+            }.padding(.vertical, 12)
             RowDivider()
           }
         }

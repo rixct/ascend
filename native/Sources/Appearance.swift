@@ -65,7 +65,6 @@ struct Surface<Content: View>: View {
   @Environment(\.colorScheme) private var scheme
   @AppStorage("style") private var style = "minimal"
   var padding: CGFloat = 22
-  var fillHeight = false
   @ViewBuilder let content: () -> Content
   private var colors: [Color] {
     if style == "colorful", scheme != .dark {
@@ -80,9 +79,7 @@ struct Surface<Content: View>: View {
   }
   var body: some View {
     let _ = locale
-    content().padding(padding).frame(
-      maxWidth: .infinity, maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading
-    )
+    content().padding(padding).frame(maxWidth: .infinity, alignment: .topLeading)
     .background {
       RoundedRectangle(cornerRadius: 16, style: .continuous)
         .fill(
@@ -141,10 +138,9 @@ struct PencilButton: View {
   }
 }
 
-struct SectionCard<Content: View>: View {
+struct CanvasSection<Content: View>: View {
   @Environment(\.locale) private var locale
   let title: String
-  var fillHeight = false
   var detail: String? = nil
   var actionTitle: String? = nil
   var pencil = false
@@ -153,56 +149,44 @@ struct SectionCard<Content: View>: View {
   @ViewBuilder let content: () -> Content
   var body: some View {
     let _ = locale
-    Surface(fillHeight: fillHeight) {
-      VStack(alignment: .leading, spacing: 20) {
-        HStack(alignment: .center, spacing: 8) {
-          Text(L(title)).font(.system(size: 15, weight: .semibold))
-          if let accessory { accessory }
-          Spacer(minLength: 12)
-          if let detail { Text(L(detail)).font(.system(size: 12)).foregroundStyle(.secondary) }
-          if let actionTitle, let action {
-            if pencil {
-              PencilButton(label: LocalizedStringKey(actionTitle), action: action)
-            } else {
-              Button(L(actionTitle), action: action).buttonStyle(.borderless).controlSize(.small)
-            }
+    VStack(alignment: .leading, spacing: 16) {
+      HStack(alignment: .center, spacing: 8) {
+        Text(L(title)).font(.system(size: 15, weight: .semibold))
+          .accessibilityAddTraits(.isHeader)
+        if let accessory { accessory }
+        Spacer(minLength: 12)
+        if let detail { Text(L(detail)).font(.system(size: 12)).foregroundStyle(.secondary) }
+        if let actionTitle, let action {
+          if pencil {
+            PencilButton(label: LocalizedStringKey(actionTitle), action: action)
+          } else {
+            Button(L(actionTitle), action: action).buttonStyle(.borderless).controlSize(.small)
           }
         }
-        content()
       }
+      content()
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
 struct ScreenLayout<Content: View>: View {
-  @Environment(\.locale) private var locale
-  @Environment(\.colorScheme) private var scheme
-  @AppStorage("style") private var style = "minimal"
   @ViewBuilder let content: () -> Content
   var body: some View {
-    let _ = locale
     ScrollView {
-      VStack(alignment: .leading, spacing: 22) { content() }
+      VStack(alignment: .leading, spacing: 24) { content() }
         .frame(maxWidth: 1180, alignment: .leading).padding(28).frame(
           maxWidth: .infinity, alignment: .top)
     }
     .modifier(SoftScrollEdge())
-    .background(AppChrome.canvas(style: style, scheme: scheme))
   }
 }
 
 /// Full-height pages use the same scrolling root as Analytics and Balance,
 /// so the window toolbar keeps one scroll-edge treatment instead of a solid bar.
 struct PageFrame<Content: View>: View {
-  @Environment(\.locale) private var locale
-  @Environment(\.colorScheme) private var scheme
-  @AppStorage("style") private var style = "minimal"
   @ViewBuilder let content: () -> Content
-  var body: some View {
-    let _ = locale
-    page.background(AppChrome.canvas(style: style, scheme: scheme))
-  }
-  @ViewBuilder private var page: some View {
+  @ViewBuilder var body: some View {
     if #available(macOS 14, *) {
       ScrollView { content().containerRelativeFrame(.vertical, alignment: .top) }
         .scrollBounceBehavior(.basedOnSize)
