@@ -6,59 +6,63 @@ struct Metric: View {
   @Environment(\.locale) private var locale
   let title: String
   let value: String
-  var symbol = "sparkles"
-  var color: Color = AppStyle.accent
   var body: some View {
     let _ = locale
-    Surface(padding: 16) {
-      VStack(alignment: .leading, spacing: 12) {
-        HStack {
-          Text(L(title)).font(.system(size: 12, weight: .medium)).foregroundStyle(Color.secondary)
-          Spacer(minLength: 6)
-          Image(systemName: symbol).font(.system(size: 12, weight: .medium)).foregroundStyle(color)
-            .frame(width: 24, height: 24).background(
-              color.opacity(0.09), in: RoundedRectangle(cornerRadius: 9))
-        }
-        Text(L(value)).font(.system(size: 26, weight: .semibold, design: .rounded))
-          .monospacedDigit()
-          .lineLimit(1).minimumScaleFactor(0.7)
-      }
+    VStack(alignment: .leading, spacing: 5) {
+      Text(verbatim: value).font(.system(size: 33, weight: .medium))
+        .monospacedDigit()
+        .lineLimit(1).minimumScaleFactor(0.7)
+      Text(L(title)).font(.system(size: 12)).foregroundStyle(.secondary)
     }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(Text(L(title)))
+    .accessibilityValue(Text(verbatim: value))
   }
 }
 
 struct DashboardView: View {
   @Environment(\.locale) private var locale
-  @EnvironmentObject var store: Store
   let state: GameState
   let summary: Summary
   var body: some View {
     let _ = locale
-    ScreenLayout {
-      HStack(spacing: 14) {
-        Metric(
-          title: "Practice today",
-          value:
-            L(
+    GeometryReader { viewport in
+      let sideBySide = viewport.size.width >= 760
+      let layout = sideBySide
+        ? AnyLayout(HStackLayout(alignment: .top, spacing: 42))
+        : AnyLayout(VStackLayout(alignment: .leading, spacing: 30))
+      ScreenLayout {
+        HStack(alignment: .top, spacing: 38) {
+          Metric(
+            title: "Practice today",
+            value: L(
               "%d min",
-              state.sessions.filter { $0.day == summary.today }.reduce(0) { $0 + $1.seconds } / 60),
-          symbol: "clock", color: AppStyle.blue)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Metric(
-          title: "Discipline",
-          value: summary.discipline.map {
-            (summary.preliminary ? "≈" : "") + String(Int($0.rounded()))
-          } ?? "—", symbol: "checkmark.seal", color: AppStyle.mint)
-          .frame(maxWidth: .infinity, alignment: .leading)
+              state.sessions.filter { $0.day == summary.today }.reduce(0) { $0 + $1.seconds } / 60))
+          Metric(
+            title: "Discipline",
+            value: summary.discipline.map {
+              (summary.preliminary ? "≈" : "") + String(Int($0.rounded()))
+            } ?? "—")
+          Spacer(minLength: 8)
+          Text(dateText(summary.today))
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .padding(.top, 9)
+        }
+        RowDivider()
+        layout {
+          CanvasSection(title: "Practice") {
+            if state.active != nil {
+              Surface(padding: 20) { TimerView(state: state, summary: summary) }
+            } else {
+              TimerView(state: state, summary: summary)
+            }
+          }
+          DailyRoutineView(summary: summary)
+            .frame(maxWidth: sideBySide ? 284 : .infinity, alignment: .leading)
+        }
       }
-      HStack(alignment: .top, spacing: 20) {
-        SectionCard(title: "Practice", fillHeight: true) {
-          TimerView(state: state, summary: summary).frame(
-            maxHeight: .infinity, alignment: .topLeading)
-        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        DailyRoutineCard(summary: summary)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      }.fixedSize(horizontal: false, vertical: true)
     }
   }
 }
@@ -71,10 +75,9 @@ struct TimerView: View {
   @State private var notes = ""
   @State private var confirmReset = false
   @State private var confirmCancel = false
-  @State private var hoveredQuest: String?
   var body: some View {
     let _ = locale
-    VStack(alignment: .leading, spacing: 18) {
+    VStack(alignment: .leading, spacing: 15) {
       if let active = state.active {
         if active.isStrict { StrictSessionStatus(active: active) }
         HStack {
@@ -100,16 +103,19 @@ struct TimerView: View {
         Text(state.quest(active.quest_id)?.title ?? L("Session")).font(
           .system(size: 18, weight: .semibold)
         ).fixedSize(horizontal: false, vertical: true)
-        Text(clock(active.elapsed_seconds)).font(
-          .system(size: 50, weight: .light, design: .rounded)
-        ).monospacedDigit().contentTransition(.identity)
+        Text(clock(active.elapsed_seconds))
+          .font(.system(size: 49, weight: .light))
+          .monospacedDigit()
+          .contentTransition(.identity)
         if let quest = state.quest(active.quest_id) {
           ProgressTrack(
             value: Double(active.elapsed_seconds), total: Double(quest.estimate_minutes * 60))
         }
-        TextField("Add a session note", text: $notes).textFieldStyle(.roundedBorder).controlSize(
-          .large
-        )
+        TextField("Add a session note", text: $notes)
+          .textFieldStyle(.plain)
+          .font(.system(size: 13))
+          .padding(.vertical, 8)
+          .overlay(alignment: .bottom) { RowDivider() }
         .onSubmit { store.send("notes", ["id": active.id, "text": notes]) }
         .onAppear { notes = active.notes }
         .onChange(of: active.id) { _ in notes = active.notes }
@@ -123,29 +129,39 @@ struct TimerView: View {
             Label(
               L(active.running ? "Pause" : "Resume"), systemImage: active.running ? "pause" : "play"
             )
-          }.controlSize(.large)
-          Button {
-            confirmCancel = true
-          } label: {
-            Label("Cancel session", systemImage: "xmark")
-          }.controlSize(.large)
-          .confirmationDialog(
-            "Cancel this session?", isPresented: $confirmCancel, titleVisibility: .visible
-          ) {
-            Button("Cancel session", role: .destructive) {
-              store.send("discard_session", ["id": active.id])
-            }
-            Button("Keep session", role: .cancel) {}
-          } message: {
-            Text("This session's time and notes will not be saved.")
           }
-          Button {
-            confirmReset = true
+          .buttonStyle(.bordered)
+          Menu {
+            Button {
+              confirmReset = true
+            } label: {
+              Label("Reset timer", systemImage: "arrow.counterclockwise")
+            }
+            Button(role: .destructive) {
+              confirmCancel = true
+            } label: {
+              Label("Cancel session", systemImage: "xmark")
+            }
           } label: {
-            Label("Reset timer", systemImage: "arrow.counterclockwise")
-          }.controlSize(.large)
-          Button("Finish session") { store.finish() }.buttonStyle(.borderedProminent).controlSize(
-            .large)
+            Image(systemName: "ellipsis").frame(width: 25, height: 24)
+          }
+          .menuStyle(.borderlessButton)
+          .menuIndicator(.hidden)
+          .fixedSize()
+          .accessibilityLabel("Session actions")
+          .help("Session actions")
+          Spacer(minLength: 4)
+          Button("Finish session") { store.finish() }.buttonStyle(.borderedProminent)
+        }
+        .confirmationDialog(
+          "Cancel this session?", isPresented: $confirmCancel, titleVisibility: .visible
+        ) {
+          Button("Cancel session", role: .destructive) {
+            store.send("discard_session", ["id": active.id])
+          }
+          Button("Keep session", role: .cancel) {}
+        } message: {
+          Text("This session's time and notes will not be saved.")
         }
         .confirmationDialog("Reset the timer?", isPresented: $confirmReset, titleVisibility: .visible) {
           Button("Reset timer", role: .destructive) { store.send("reset_timer") }
@@ -158,12 +174,12 @@ struct TimerView: View {
         if practices.isEmpty {
           EmptyState(
             symbol: "viewfinder", title: "Nothing to practice yet",
-            message: "Add something you start with a timer. A check without a timer belongs in the routine.",
             buttonTitle: "Create a quest", compact: true
           ) { store.sheet = .quest }
         } else {
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: 0) {
             ForEach(practices) { quest in
+              if quest.id != practices.first?.id { RowDivider() }
               practiceRow(quest)
             }
           }
@@ -200,17 +216,18 @@ struct TimerView: View {
   private func practiceRow(_ quest: Quest) -> some View {
     let done = doneToday(quest)
     let saved = state.sessions.filter { $0.quest_id == quest.id }.count
-    let progress =
-      quest.kind == "Habit"
-      ? L("%d min", quest.estimate_minutes)
-      : L("%d of %d", saved, quest.sessionTarget)
+    let details = [
+      state.skill(quest.skill_id),
+      L("%d min", quest.estimate_minutes),
+      quest.kind != "Habit" && quest.sessionTarget > 1 ? L("%d of %d", saved, quest.sessionTarget) : "",
+    ].filter { !$0.isEmpty }.joined(separator: " · ")
     return HStack(alignment: .center, spacing: 10) {
       VStack(alignment: .leading, spacing: 3) {
         Text(quest.title)
-          .font(.system(size: 14, weight: .semibold))
+          .font(.system(size: 14, weight: .medium))
           .foregroundStyle(done ? Color.secondary : Color.primary)
           .fixedSize(horizontal: false, vertical: true)
-        Text(verbatim: "\(state.skill(quest.skill_id)) · \(quest.kindName) · \(progress)")
+        Text(verbatim: details)
           .font(.system(size: 12))
           .foregroundStyle(.secondary)
           .lineLimit(1)
@@ -221,7 +238,7 @@ struct TimerView: View {
           .font(.system(size: 16))
           .foregroundStyle(AppStyle.mint)
           .accessibilityLabel("Done today")
-      } else if hoveredQuest == quest.id, store.available(quest) {
+      } else if store.available(quest) {
         Button {
           store.startSession(quest.id)
         } label: {
@@ -229,72 +246,30 @@ struct TimerView: View {
             .font(.system(size: 11, weight: .semibold))
             .frame(width: 28, height: 22)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.bordered)
         .controlSize(.small)
         .disabled(!store.canStart || store.busy)
         .accessibilityLabel("Start")
         .help("Start")
       }
     }
-    .padding(.vertical, 2)
-    .contentShape(Rectangle())
-    .background {
-      RowHover { hovering in
-        if hovering {
-          hoveredQuest = quest.id
-        } else if hoveredQuest == quest.id {
-          hoveredQuest = nil
-        }
+    .padding(.vertical, 9)
+  }
+}
+
+private struct CanvasSelection: ViewModifier {
+  let selected: Bool
+  @State private var hovered = false
+
+  func body(content: Content) -> some View {
+    content
+      .padding(.horizontal, 9)
+      .padding(.vertical, 9)
+      .background {
+        RoundedRectangle(cornerRadius: 8)
+          .fill(selected ? AppStyle.accent.opacity(0.14) : Color.primary.opacity(hovered ? 0.05 : 0))
       }
-    }
-    .accessibilityAction(named: Text("Start")) {
-      guard !done, store.available(quest), store.canStart, !store.busy else { return }
-      store.startSession(quest.id)
-    }
-  }
-}
-
-private struct RowHover: NSViewRepresentable {
-  var changed: (Bool) -> Void
-  func makeNSView(context: Context) -> RowHoverView {
-    let view = RowHoverView()
-    view.changed = changed
-    return view
-  }
-  func updateNSView(_ view: RowHoverView, context: Context) {
-    view.changed = changed
-  }
-}
-
-private final class RowHoverView: NSView {
-  var changed: (Bool) -> Void = { _ in }
-  private var inside = false
-  override func updateTrackingAreas() {
-    super.updateTrackingAreas()
-    trackingAreas.forEach(removeTrackingArea)
-    addTrackingArea(
-      NSTrackingArea(
-        rect: bounds,
-        options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
-        owner: self,
-        userInfo: nil))
-  }
-  override func mouseEntered(with event: NSEvent) {
-    guard !inside else { return }
-    inside = true
-    changed(true)
-  }
-  override func mouseExited(with event: NSEvent) {
-    guard inside else { return }
-    inside = false
-    changed(false)
-  }
-  override func hitTest(_ point: NSPoint) -> NSView? { nil }
-  override func viewDidMoveToWindow() {
-    super.viewDidMoveToWindow()
-    guard window == nil, inside else { return }
-    inside = false
-    changed(false)
+      .onHover { hovered = $0 }
   }
 }
 
@@ -313,7 +288,11 @@ struct FocusView: View {
         Spacer()
         Button("Back to today") { store.focusMode = false }.buttonStyle(.borderless)
       }
-      Surface(padding: 30) { TimerView(state: state, summary: summary) }
+      if state.active != nil {
+        Surface(padding: 24) { TimerView(state: state, summary: summary) }
+      } else {
+        TimerView(state: state, summary: summary)
+      }
     }.frame(maxWidth: 530).padding(32).frame(maxWidth: .infinity, maxHeight: .infinity).background(
       AppChrome.canvas(style: style, scheme: scheme))
   }
@@ -329,10 +308,10 @@ struct CharacterView: View {
   var body: some View {
     let _ = locale
     PageFrame {
-      Surface(padding: 0, fillHeight: true) {
-        GeometryReader { geo in
-          let total = geo.size.width
-          let gap: CGFloat = 9
+      GeometryReader { geo in
+        let total = geo.size.width
+        let gap: CGFloat = 9
+        if total >= ProfileColumn.minPane + gap + ProfileColumn.minChart {
           let left = leftWidth(total: total, gap: gap)
           HStack(spacing: 0) {
             profile.frame(width: left)
@@ -341,47 +320,57 @@ struct CharacterView: View {
           }
           .coordinateSpace(name: "character-split")
           .frame(width: total, height: geo.size.height, alignment: .leading)
+        } else {
+          ScrollView {
+            VStack(spacing: 0) {
+              profile
+              RowDivider().padding(.horizontal, ProfileColumn.padding)
+              attributes.frame(height: 360)
+            }
+          }
         }
       }
-      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .padding(24)
-      .frame(
-        minWidth: ProfileColumn.minPane + 9 + ProfileColumn.minChart,
-        maxWidth: .infinity, minHeight: 540, maxHeight: .infinity, alignment: .top
-      )
+      .frame(minHeight: 480)
     }
   }
   private var profile: some View {
-    HStack(alignment: .top, spacing: ProfileColumn.spacing) {
-      ProfileAvatar(encodedImage: state.settings.avatar, size: ProfileColumn.avatar)
-      VStack(alignment: .leading, spacing: 10) {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+    VStack(alignment: .leading, spacing: 22) {
+      HStack(spacing: 16) {
+        ProfileAvatar(encodedImage: state.settings.avatar, size: 68, circular: true)
+          .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 4) {
           Text(state.settings.name)
-            .font(.system(size: 24, weight: .semibold))
-            .lineLimit(1)
-          Spacer(minLength: 8)
-          StatusPill(title: L("Level %d", summary.level), symbol: "sparkles")
-            .fixedSize()
+            .font(.system(size: 26, weight: .semibold))
+            .lineLimit(2)
+          Text(L("Level %d", summary.level))
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(.secondary)
         }
-        ProgressTrack(value: summary.level_xp, total: summary.next_xp, height: 7)
+      }
+      if let bio = state.settings.bio, !bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        Text(bio).font(.system(size: 14)).foregroundStyle(.secondary)
+          .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+      }
+      VStack(alignment: .leading, spacing: 10) {
         HStack(spacing: 12) {
           Text(L("%@ total XP", number(Double(state.character_xp_milli) / 1000)))
             .lineLimit(1)
           Spacer(minLength: 8)
           Text("\(number(summary.level_xp)) / \(number(summary.next_xp)) XP")
             .lineLimit(1)
-            .fixedSize()
+            .monospacedDigit()
         }
         .font(.system(size: 12))
         .foregroundStyle(Color.secondary)
+        ProgressTrack(value: summary.level_xp, total: summary.next_xp, height: 5)
       }
-      .frame(width: ProfileColumn.text, alignment: .leading)
     }
+    .frame(maxWidth: 350, alignment: .leading)
     .padding(ProfileColumn.padding)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
   private var attributes: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 16) {
       HStack(alignment: .firstTextBaseline) {
         Text("Attributes").font(.system(size: 15, weight: .semibold))
         Spacer(minLength: 12)
@@ -392,7 +381,8 @@ struct CharacterView: View {
         }
       }
       AttributeHexagon(attributes: summary.attributes)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: 570, maxHeight: 495)
+        .frame(maxWidth: .infinity)
     }
     .padding(26)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -449,12 +439,9 @@ struct CharacterView: View {
 }
 
 private enum ProfileColumn {
-  static let text: CGFloat = 292
-  static let avatar: CGFloat = 84
-  static let spacing: CGFloat = 18
-  static let padding: CGFloat = 28
-  static var minPane: CGFloat { padding * 2 + avatar + spacing + text }
-  static let minChart: CGFloat = 360
+  static let padding: CGFloat = 32
+  static let minPane: CGFloat = 330
+  static let minChart: CGFloat = 370
 }
 
 private struct AttributeHexagon: View {
@@ -474,7 +461,8 @@ private struct AttributeHexagon: View {
     let _ = locale
     GeometryReader { geo in
       let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-      let radius = min(geo.size.width, geo.size.height) * 0.30
+      let labelWidth = min(112, geo.size.width / 3)
+      let radius = max(12, min((geo.size.width - labelWidth) * 0.53, geo.size.height * 0.37) - 24)
       ZStack {
         Canvas { context, _ in
           for step in 1...4 {
@@ -492,16 +480,21 @@ private struct AttributeHexagon: View {
           let shape = polygon(center: center, radius: radius, scale: nil)
           context.fill(shape, with: .color(AppStyle.accent.opacity(0.28)))
           context.stroke(shape, with: .color(AppStyle.accent), lineWidth: 2)
-          for index in 0..<6 {
+          for index in 0..<6 where spokes[index].value > 0 {
             let point = vertex(
               center: center, radius: radius, index: index, scale: spokes[index].value / 100)
             let dot = Path(
-              ellipseIn: CGRect(x: point.x - 4, y: point.y - 4, width: 8, height: 8))
+              ellipseIn: CGRect(x: point.x - 3, y: point.y - 3, width: 6, height: 6))
             context.fill(dot, with: .color(AppStyle.accent))
           }
         }
         ForEach(0..<6, id: \.self) { index in
-          let point = vertex(center: center, radius: radius + 42, index: index, scale: 1)
+          let point = vertex(center: center, radius: radius + 38, index: index, scale: 1)
+          let labelOffset: CGFloat = switch index {
+          case 1, 5: -10
+          case 2, 4: 10
+          default: 0
+          }
           VStack(spacing: 2) {
             Text(englishName(spokes[index].name))
               .font(.system(size: 11, weight: .medium))
@@ -511,8 +504,10 @@ private struct AttributeHexagon: View {
               .font(.system(size: 12, weight: .semibold, design: .rounded))
               .foregroundStyle(.secondary)
           }
-          .frame(width: 108)
-          .position(point)
+          .frame(width: labelWidth)
+          .position(
+            x: min(max(point.x, labelWidth / 2), geo.size.width - labelWidth / 2),
+            y: point.y + labelOffset)
         }
       }
     }
@@ -608,20 +603,18 @@ struct SkillsView: View {
     PageFrame {
       Group {
         if state.skills.isEmpty {
-          Surface {
-            EmptyState(
-              symbol: "point.3.connected.trianglepath.dotted",
-              title: "What would you like to get better at?",
-              message:
-                "Add a skill you want to develop. Your practice and milestones will grow from there.",
-              buttonTitle: "Add a skill"
-            ) { store.sheet = .skill }
-          }
+          EmptyState(
+            symbol: "point.3.connected.trianglepath.dotted",
+            title: "No skills yet",
+            message: "Add a skill to track practice and milestones.",
+            buttonTitle: "Add a skill"
+          ) { store.sheet = .skill }
         } else {
           skillsSplit
         }
       }
-      .padding(24)
+      .padding(.horizontal, 32)
+      .padding(.top, 20)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     .onAppear { selected = state.skills.first?.id }
@@ -642,113 +635,109 @@ struct SkillsView: View {
     }
   }
   private var skillsSplit: some View {
-    Surface(padding: 0) {
-      HStack(spacing: 0) {
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 4) {
-            ForEach(state.skills) { skill in skillRow(skill) }
-          }
-          .padding(12)
-          .frame(maxWidth: .infinity, alignment: .leading)
+    HStack(spacing: 0) {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 4) {
+          ForEach(state.skills) { skill in skillRow(skill) }
         }
-        .frame(width: 280)
-        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
-        if let skill = state.skills.first(where: { $0.id == selected }) ?? state.skills.first {
-          ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-              Surface {
-                VStack(alignment: .leading, spacing: 18) {
-                  HStack {
-                    Text(skill.displayTitle).font(.system(size: 23, weight: .semibold))
-                    Spacer()
-                    PencilButton(label: "Edit skill") { store.sheet = .editSkill(skill.id) }
-                      .disabled(store.busy)
-                    if !summary.unlocked_skills.contains(skill.id) {
-                      StatusPill(title: "Locked", color: .secondary, symbol: "lock.fill")
-                    }
-                  }
-                  HStack(spacing: 28) {
-                    VStack(alignment: .leading, spacing: 5) {
-                      Text("Experience").font(.system(size: 11)).foregroundStyle(Color.secondary)
-                      Text("\(number(Double(skill.xp_milli) / 1000)) XP").font(
-                        .system(size: 21, weight: .semibold, design: .rounded))
-                    }
-                    VStack(alignment: .leading, spacing: 5) {
-                      Text("Verified milestones").font(.system(size: 11)).foregroundStyle(
-                        Color.secondary)
-                      Text("\(skill.mastery)").font(
-                        .system(size: 21, weight: .semibold, design: .rounded))
-                    }
-                  }
-                  if !skill.prerequisites.isEmpty {
-                    Label(
-                      skill.prerequisites.map { state.skill($0) }.joined(separator: ", "),
-                      systemImage: "arrow.turn.down.right"
-                    ).font(.system(size: 12)).foregroundStyle(Color.secondary)
-                  }
-                  Text(FocusList.summary(skill))
-                  .font(.system(size: 12)).foregroundStyle(Color.secondary).fixedSize(
-                    horizontal: false, vertical: true)
-                  HStack(spacing: 8) {
-                    Button("Verify mastery…") { store.sheet = .mastery(skill.id) }.buttonStyle(
-                      .borderedProminent
-                    ).controlSize(.large).disabled(!state.canVerifySkill(skill.id, summary: summary))
-                    if !state.skillQuestsCompleted(skill.id) {
-                      HintButton(text: "Complete all quests to verify this skill.")
-                    }
+        .padding(.trailing, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .frame(width: 222)
+      Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
+      if let skill = state.skills.first(where: { $0.id == selected }) ?? state.skills.first {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 18) {
+              HStack {
+                Text(skill.displayTitle).font(.system(size: 25, weight: .semibold))
+                Spacer()
+                PencilButton(label: "Edit skill") { store.sheet = .editSkill(skill.id) }
+                  .disabled(store.busy)
+                if !summary.unlocked_skills.contains(skill.id) {
+                  StatusPill(title: "Locked", color: .secondary, symbol: "lock.fill")
+                }
+              }
+              HStack(spacing: 28) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("\(number(Double(skill.xp_milli) / 1000)) XP")
+                      .font(.system(size: 21, weight: .medium)).monospacedDigit()
+                    Text("Experience").font(.system(size: 12)).foregroundStyle(.secondary)
+                }
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("\(skill.mastery)").font(.system(size: 21, weight: .medium))
+                      .monospacedDigit()
+                    Text("Verified milestones").font(.system(size: 12)).foregroundStyle(.secondary)
+                }
+              }
+              if !skill.prerequisites.isEmpty {
+                Label(
+                  skill.prerequisites.map { state.skill($0) }.joined(separator: ", "),
+                  systemImage: "arrow.turn.down.right"
+                ).font(.system(size: 12)).foregroundStyle(Color.secondary)
+              }
+              Text(FocusList.summary(skill))
+                .font(.system(size: 12)).foregroundStyle(Color.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+              HStack(spacing: 8) {
+                  Button("Verify mastery…") { store.sheet = .mastery(skill.id) }
+                    .buttonStyle(.bordered)
+                    .disabled(!state.canVerifySkill(skill.id, summary: summary))
+                if !state.skillQuestsCompleted(skill.id) {
+                  HintButton(text: "Complete all quests to verify this skill.")
+                }
+              }
+            }
+            RowDivider()
+            CanvasSection(title: "Verified outcomes") {
+              if skill.evidence.isEmpty {
+                EmptyState(
+                  symbol: "checkmark.seal", title: "No verified outcomes yet",
+                  compact: true)
+              } else {
+                ForEach(Array(skill.evidence.enumerated()), id: \.offset) { _, text in
+                  Label {
+                    Text(text).font(.system(size: 13)).textSelection(.enabled)
+                  } icon: {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(AppStyle.mint)
                   }
                 }
               }
-              SectionCard(title: "Verified outcomes") {
-                if skill.evidence.isEmpty {
-                  EmptyState(
-                    symbol: "checkmark.seal", title: "Let your work speak",
-                    message: "Verified outcomes will appear here as your skill develops.",
-                    compact: true)
-                } else {
-                  ForEach(Array(skill.evidence.enumerated()), id: \.offset) { _, text in
-                    Label {
-                      Text(text).font(.system(size: 13)).textSelection(.enabled)
-                    } icon: {
-                      Image(systemName: "checkmark.circle.fill").foregroundStyle(AppStyle.mint)
-                    }
-                  }
-                }
-              }
-              SectionCard(title: "Recent practice") {
-                let sessions = Array(
-                  state.sessions.filter { $0.skill_id == skill.id }.suffix(8).reversed())
-                if sessions.isEmpty {
-                  EmptyState(
-                    symbol: "clock", title: "Your first session is ahead",
-                    message: "Practice linked to this skill will appear here.", compact: true)
-                } else {
-                  VStack(spacing: 14) {
-                    ForEach(sessions) { session in
-                      HStack {
-                        Text(dateText(session.day)).font(.system(size: 13))
-                        Spacer()
-                        Text(L("%@ min", number(Double(session.seconds) / 60))).font(
-                          .system(size: 12)
-                        )
-                        .foregroundStyle(Color.secondary)
-                        Text("+\(number(Double(session.reward_milli) / 1000)) XP").font(
-                          .system(size: 12, weight: .medium)
-                        ).foregroundStyle(AppStyle.accent).frame(width: 70, alignment: .trailing)
-                      }
+            }
+            RowDivider()
+            CanvasSection(title: "Recent practice") {
+              let sessions = Array(
+                state.sessions.filter { $0.skill_id == skill.id }.suffix(8).reversed())
+              if sessions.isEmpty {
+                EmptyState(
+                  symbol: "clock", title: "No sessions yet", compact: true)
+              } else {
+                VStack(spacing: 14) {
+                  ForEach(sessions) { session in
+                    HStack {
+                      Text(dateText(session.day)).font(.system(size: 13))
+                      Spacer()
+                      Text(L("%@ min", number(Double(session.seconds) / 60))).font(
+                        .system(size: 12)
+                      )
+                      .foregroundStyle(Color.secondary)
+                      Text("+\(number(Double(session.reward_milli) / 1000)) XP").font(
+                        .system(size: 12, weight: .medium)
+                      ).foregroundStyle(AppStyle.accent).frame(width: 70, alignment: .trailing)
                     }
                   }
                 }
               }
             }
-            .padding(22)
-            .frame(maxWidth: .infinity, alignment: .leading)
           }
+          .frame(maxWidth: 720, alignment: .leading)
+          .padding(.leading, 28)
+          .padding(.bottom, 24)
+          .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
-    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
   private func skillRow(_ skill: Skill) -> some View {
     let open = selected == skill.id
@@ -769,7 +758,11 @@ struct SkillsView: View {
             .frame(width: 16, height: 16)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(open ? Color.white.opacity(0.85) : Color.secondary)
+        .foregroundStyle(.secondary)
+        .accessibilityLabel("Quests")
+        .opacity(quests.isEmpty ? 0 : 1)
+        .disabled(quests.isEmpty)
+        .accessibilityHidden(quests.isEmpty)
         Button {
           if store.skillEditing {
             if store.skillSelection.contains(skill.id) {
@@ -787,34 +780,31 @@ struct SkillsView: View {
                 systemName: store.skillSelection.contains(skill.id)
                   ? "checkmark.circle.fill" : "circle"
               )
-              .foregroundStyle(open ? Color.white : AppStyle.accent)
+              .foregroundStyle(AppStyle.accent)
             }
             Image(
               systemName: summary.unlocked_skills.contains(skill.id) ? "circle.hexagongrid" : "lock"
             )
             .font(.system(size: 14, weight: .light))
             .frame(width: 18)
+            .foregroundStyle(open ? AppStyle.accent : .secondary)
             VStack(alignment: .leading, spacing: 2) {
               Text(skill.displayTitle).font(.system(size: 13, weight: .medium)).lineLimit(1)
-              Text("\(number(Double(skill.xp_milli) / 1000)) XP").font(.system(size: 11))
+              Text("\(number(Double(skill.xp_milli) / 1000)) XP")
+                .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
             if skill.mastery > 0 {
               Image(systemName: "checkmark.seal.fill").font(.system(size: 12))
             }
           }
-          .foregroundStyle(open ? Color.white : Color.primary)
           .frame(maxWidth: .infinity, alignment: .leading)
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(open ? .isSelected : [])
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 7)
-      .background {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(open ? AppStyle.accent : Color.clear)
-      }
+      .modifier(CanvasSelection(selected: open))
       if shown {
         if quests.isEmpty {
           Text("No quests yet")
@@ -869,18 +859,17 @@ struct QuestsView: View {
     PageFrame {
       Group {
         if state.quests.isEmpty {
-          Surface {
-            EmptyState(
-              symbol: "checklist", title: "One clear next step",
-              message: "Turn something you want to do into a quest with a clear outcome.",
-              buttonTitle: "Create a quest"
-            ) { store.sheet = .quest }
-          }
+          EmptyState(
+            symbol: "checklist", title: "No quests yet",
+            message: "Create a quest to plan what to practice.",
+            buttonTitle: "Create a quest"
+          ) { store.sheet = .quest }
         } else {
           questSplit
         }
       }
-      .padding(24)
+      .padding(.horizontal, 32)
+      .padding(.top, 20)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     .onAppear { if selected == nil { selected = quests.first?.id } }
@@ -890,150 +879,143 @@ struct QuestsView: View {
   }
   private var questSplit: some View {
     let practice = QuestPractice.totals(state.sessions)
-    return Surface(padding: 0) {
-      HStack(spacing: 0) {
-        VStack(spacing: 0) {
-          VStack(spacing: 10) {
-            Picker("", selection: $filter) {
-              Text("Active").tag(0)
-              Text("Closed").tag(1)
-              Text("All").tag(2)
-            }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Quest status")
-            HStack(spacing: 7) {
-              Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
-              TextField("Search quests", text: $search).textFieldStyle(.plain)
-            }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
-              Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8))
-          }.padding(12)
-          RowDivider()
-          if quests.isEmpty {
-            EmptyState(
-              symbol: search.isEmpty ? "checklist" : "magnifyingglass",
-              title: search.isEmpty
-                ? (filter == 1 ? "Nothing closed out yet" : "One clear next step")
-                : "No matching quests",
-              message: search.isEmpty
-                ? (filter == 1
-                  ? "Completed and cancelled quests will be kept here."
-                  : "Turn something you want to do into a quest with a clear outcome.")
-                : "Try a different search or browse all your quests.",
-              buttonTitle: search.isEmpty ? (filter == 1 ? nil : "Create a quest") : "Clear search"
-            ) {
-              if search.isEmpty {
-                store.sheet = .quest
-              } else {
-                search = ""
-                filter = 2
-              }
-            }
-          } else {
-            ScrollView {
-              LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(quests) { quest in questRow(quest) }
-              }
-              .padding(12)
-              .frame(maxWidth: .infinity, alignment: .leading)
+    return HStack(spacing: 0) {
+      VStack(spacing: 0) {
+        VStack(spacing: 10) {
+          CanvasTabs(options: [("Active", 0), ("Closed", 1), ("All", 2)],
+                     selection: $filter, label: "Quest status")
+          CanvasSearchField(title: "Search quests", text: $search)
+        }
+        .padding(.trailing, 14)
+        .padding(.bottom, 12)
+        RowDivider()
+        ScrollView {
+          LazyVStack(alignment: .leading, spacing: 4) {
+            ForEach(quests) { quest in questRow(quest) }
+          }
+          .padding(.vertical, 8)
+          .padding(.trailing, 12)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      }
+      .frame(width: 222)
+      .frame(maxHeight: .infinity, alignment: .top)
+      Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1).accessibilityHidden(true)
+      Group {
+        if let quest = quests.first(where: { $0.id == selected }) ?? quests.first {
+          questDetail(quest, practice: practice)
+        } else {
+          EmptyState(
+            symbol: search.isEmpty ? "checklist" : "magnifyingglass",
+            title: search.isEmpty
+              ? (filter == 1 ? "Nothing closed out yet" : "No active quests")
+              : "No matching quests",
+            buttonTitle: search.isEmpty ? (filter == 1 ? nil : "Create a quest") : "Clear search"
+          ) {
+            if search.isEmpty {
+              store.sheet = .quest
+            } else {
+              search = ""
+              filter = 2
             }
           }
+          .padding(.leading, 28)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
-        Group {
-          if let quest = quests.first(where: { $0.id == selected }) ?? quests.first {
-            questDetail(quest, practice: practice)
-          }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
-    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
   private func questDetail(_ quest: Quest, practice: [String: QuestPractice]) -> some View {
     let saved = practice[quest.id] ?? QuestPractice()
     return ScrollView {
-      VStack(alignment: .leading, spacing: 22) {
-        Surface {
-          VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .firstTextBaseline) {
-              Text(quest.title).font(.system(size: 23, weight: .semibold)).fixedSize(
-                horizontal: false, vertical: true)
-              Spacer(minLength: 12)
-              PencilButton(label: "Edit quest") { store.sheet = .editQuest(quest.id) }
-                .disabled(store.busy)
-              StatusPill(
-                title: summary.unlocked_quests.contains(quest.id) ? quest.statusName : "Locked",
-                color: quest.status == "Completed"
-                  ? AppStyle.mint : quest.status == "Active" ? AppStyle.accent : .secondary)
+      VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 8) {
+          StatusPill(
+            title: summary.unlocked_quests.contains(quest.id) ? quest.statusName : "Locked",
+            color: quest.status == "Completed"
+              ? AppStyle.mint : quest.status == "Active" ? AppStyle.accent : .secondary)
+          HStack(alignment: .firstTextBaseline) {
+            Text(quest.title).font(.system(size: 25, weight: .semibold)).fixedSize(
+              horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            PencilButton(label: "Edit quest") { store.sheet = .editQuest(quest.id) }
+              .disabled(store.busy)
+          }
+        }
+        if !quest.outcome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          Text(quest.outcome).font(.system(size: 14)).foregroundStyle(Color.secondary)
+            .lineSpacing(4).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        }
+        RowDivider()
+        LazyVGrid(
+          columns: [
+            GridItem(.flexible(), alignment: .leading),
+            GridItem(.flexible(), alignment: .leading),
+          ], alignment: .leading, spacing: 16
+        ) {
+          detailMetric("Skill", state.skill(quest.skill_id))
+          detailMetric("How it repeats", quest.kindName)
+          detailMetric("Time", L("%d min", quest.estimate_minutes))
+          if quest.kind == "Habit" {
+            detailMetric("Days to establish", "\(quest.sessionTarget)")
+          } else {
+            detailMetric("Sessions", "\(saved.sessions) / \(quest.sessionTarget)")
+          }
+        }
+        if quest.kind != "Habit" {
+          Text(L("%@ min total", number(Double(saved.seconds) / 60)))
+            .font(.system(size: 12)).foregroundStyle(.secondary)
+          ProgressTrack(
+            value: min(100, Double(saved.sessions) / Double(max(1, quest.sessionTarget)) * 100))
+        }
+        if let deadline = quest.deadline {
+          Label(dateText(deadline), systemImage: "calendar").font(.system(size: 12))
+            .foregroundStyle(.secondary)
+        }
+        HStack(spacing: 10) {
+          if store.available(quest) {
+            Button {
+              store.startSession(quest.id)
+            } label: {
+              Label("Start session", systemImage: "play.fill")
+            }.buttonStyle(.borderedProminent).disabled(!store.canStart)
+            if !store.strictLogging {
+              Button("Log time…") { store.finish(quest) }.buttonStyle(.borderless)
+                .disabled(!store.canStart)
             }
-            if !quest.outcome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-              Text(quest.outcome).font(.system(size: 13)).foregroundStyle(Color.secondary)
-                .lineSpacing(3).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-            }
-            LazyVGrid(
-              columns: [
-                GridItem(.flexible(), alignment: .leading),
-                GridItem(.flexible(), alignment: .leading),
-              ], alignment: .leading, spacing: 16
-            ) {
-              detailMetric("Skill", state.skill(quest.skill_id))
-              detailMetric("How it repeats", quest.kindName)
-              detailMetric("Time", L("%d min", quest.estimate_minutes))
-              if quest.kind == "Habit" {
-                detailMetric("Days to establish", "\(quest.sessionTarget)")
-              } else {
-                detailMetric("Sessions", "\(saved.sessions) / \(quest.sessionTarget)")
+          }
+          if !quest.closed {
+            Menu {
+              Button(L(quest.status == "Paused" ? "Return to plan" : "Pause quest")) {
+                store.send(
+                  "status",
+                  ["id": quest.id, "status": quest.status == "Paused" ? "Planned" : "Paused"])
               }
-            }
-            if quest.kind != "Habit" {
-              Text(L("%@ min total", number(Double(saved.seconds) / 60)))
-                .font(.system(size: 12)).foregroundStyle(.secondary)
-              ProgressTrack(
-                value: min(100, Double(saved.sessions) / Double(max(1, quest.sessionTarget)) * 100))
-            }
-            HStack(spacing: 10) {
-              if let deadline = quest.deadline {
-                Label(dateText(deadline), systemImage: "calendar").font(.system(size: 12))
-                  .foregroundStyle(Color.secondary)
+              Button("Cancel quest", role: .destructive) {
+                store.send("status", ["id": quest.id, "status": "Cancelled"])
               }
-              Spacer()
-              if store.available(quest) {
-                if !store.strictLogging {
-                  Button("Log time…") { store.finish(quest) }.controlSize(.large).disabled(
-                    !store.canStart)
-                }
-                Button {
-                  store.startSession(quest.id)
-                } label: {
-                  Label("Start session", systemImage: "play.fill")
-                }.buttonStyle(.borderedProminent).controlSize(.large).disabled(!store.canStart)
-              }
-              if !quest.closed {
-                Menu {
-                  Button(L(quest.status == "Paused" ? "Return to plan" : "Pause quest")) {
-                    store.send(
-                      "status",
-                      ["id": quest.id, "status": quest.status == "Paused" ? "Planned" : "Paused"])
-                  }
-                  Button("Cancel quest", role: .destructive) {
-                    store.send("status", ["id": quest.id, "status": "Cancelled"])
-                  }
-                } label: {
-                  Image(systemName: "ellipsis")
-                }.fixedSize().controlSize(.large)
-              }
+            } label: {
+              Image(systemName: "ellipsis").frame(width: 25, height: 24)
             }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .accessibilityLabel("Quest actions")
+            .help("Quest actions")
           }
         }
       }
-      .padding(22)
+      .frame(maxWidth: 720, alignment: .leading)
+      .padding(.leading, 28)
+      .padding(.bottom, 24)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
   private func detailMetric(_ title: LocalizedStringKey, _ value: String) -> some View {
     VStack(alignment: .leading, spacing: 5) {
-      Text(title).font(.system(size: 11)).foregroundStyle(Color.secondary)
-      Text(value).font(.system(size: 16, weight: .semibold)).lineLimit(2)
+      Text(title).font(.system(size: 12)).foregroundStyle(.secondary)
+      Text(value).font(.system(size: 14, weight: .medium)).lineLimit(2)
     }
   }
   private func questRow(_ quest: Quest) -> some View {
@@ -1053,41 +1035,31 @@ struct QuestsView: View {
             .frame(width: 16, height: 16)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(chosen ? Color.white.opacity(0.85) : Color.secondary)
+        .foregroundStyle(.secondary)
         .accessibilityLabel(Text("Steps"))
         Button {
           selected = quest.id
         } label: {
           HStack(spacing: 8) {
-            Image(
-              systemName: quest.kind == "Habit"
-                ? "arrow.clockwise" : quest.kind == "Project" ? "flag" : "circle.dotted"
-            )
-            .font(.system(size: 14, weight: .light))
-            .frame(width: 18)
-            .foregroundStyle(chosen ? Color.white.opacity(0.9) : Color.secondary)
             VStack(alignment: .leading, spacing: 2) {
               Text(quest.title).font(.system(size: 13, weight: .medium)).lineLimit(2)
               Text(state.skill(quest.skill_id)).font(.system(size: 11)).lineLimit(1)
-                .foregroundStyle(chosen ? Color.white.opacity(0.78) : Color.secondary)
+                .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
-            Image(systemName: mark.symbol)
-              .font(.system(size: 12, weight: .medium))
-              .foregroundStyle(chosen ? Color.white.opacity(0.9) : mark.color)
+            if let mark {
+              Image(systemName: mark.symbol)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(mark.color)
+            }
           }
-          .foregroundStyle(chosen ? Color.white : Color.primary)
           .frame(maxWidth: .infinity, alignment: .leading)
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(chosen ? .isSelected : [])
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 7)
-      .background {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(chosen ? AppStyle.accent : Color.clear)
-      }
+      .modifier(CanvasSelection(selected: chosen))
       if shown {
         QuestStepsEditor(quest: quest, showsHeading: false)
           .padding(.leading, 32)
@@ -1096,7 +1068,7 @@ struct QuestsView: View {
       }
     }
   }
-  private func questMark(_ quest: Quest) -> (symbol: String, color: Color) {
+  private func questMark(_ quest: Quest) -> (symbol: String, color: Color)? {
     if quest.status == "Completed" { return ("checkmark", AppStyle.mint) }
     let overdue =
       quest.status == "Missed"
@@ -1104,7 +1076,7 @@ struct QuestsView: View {
     if overdue { return ("xmark", Color(red: 0.86, green: 0.35, blue: 0.32)) }
     if quest.status == "Paused" { return ("pause", Color.secondary) }
     if quest.status == "Active" { return ("play.fill", AppStyle.accent) }
-    return ("circle", Color.secondary)
+    return nil
   }
 }
 
@@ -1117,49 +1089,44 @@ struct BalanceView: View {
   private var targets: [WeeklyTarget] { state.targets.filter { $0.week == summary.week } }
   var body: some View {
     let _ = locale
-    ScreenLayout {
-      Surface {
-        HStack(spacing: 18) {
-          Image(systemName: "leaf").font(.system(size: 24, weight: .light)).foregroundStyle(
-            AppStyle.mint
-          ).frame(width: 52, height: 52).background(
-            AppStyle.mint.opacity(0.09), in: RoundedRectangle(cornerRadius: 15))
-          VStack(alignment: .leading, spacing: 6) {
-            Text("Suggested workload").font(.system(size: 11)).foregroundStyle(Color.secondary)
-            Text(englishText(summary.recommendation)).font(.system(size: 17, weight: .semibold))
-          }
-          Spacer()
-          Text("\(summary.suggested_minutes)").font(
-            .system(size: 29, weight: .semibold, design: .rounded)
-          ).monospacedDigit() + Text(L(" min")).font(.system(size: 13)).foregroundColor(.secondary)
-        }.padding(.trailing, 28)
-          .overlay(alignment: .topTrailing) {
-            Button {
-              explanation.toggle()
-            } label: {
-              Image(systemName: "info.circle").foregroundStyle(Color.secondary)
-            }.buttonStyle(.plain).help("About your rhythm").popover(isPresented: $explanation) {
-              Text(englishText(summary.recommendation_detail)).font(.system(size: 13)).lineSpacing(
-                4
-              )
-              .frame(width: 330).padding(22)
-            }
-          }
+    ScreenLayout(maxWidth: 820) {
+      HStack(spacing: 20) {
+        Metric(title: "Suggested workload", value: L("%d min", summary.suggested_minutes))
+        Rectangle().fill(Color.primary.opacity(0.12)).frame(width: 1, height: 30)
+          .accessibilityHidden(true)
+        Text(englishText(summary.recommendation))
+          .font(.system(size: 15, weight: .medium))
+          .fixedSize(horizontal: false, vertical: true)
+        Spacer()
+        Button {
+          explanation.toggle()
+        } label: {
+          Image(systemName: "info.circle").foregroundStyle(.secondary)
+            .frame(width: 24, height: 24)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("About your rhythm")
+        .help("About your rhythm")
+        .popover(isPresented: $explanation) {
+          Text(englishText(summary.recommendation_detail)).font(.system(size: 13)).lineSpacing(4)
+            .frame(width: 310, alignment: .leading).padding(18)
+        }
       }
-      SectionCard(
+      RowDivider()
+      CanvasSection(
         title: "This week", detail: summary.balance.map { L("%d%% complete", Int($0.rounded())) }
       ) {
         if targets.isEmpty {
           EmptyState(
-            symbol: "scope", title: "Give your week a direction",
-            message: "Set a target for a skill you want to develop.",
-            buttonTitle: "Add a weekly goal"
+            symbol: "scope", title: "No weekly goals yet",
+            buttonTitle: "Add a weekly goal", compact: true
           ) { store.sheet = .target }
         } else {
           VStack(spacing: 22) { ForEach(targets) { target in targetRow(target) } }
         }
       }
-      SectionCard(
+      RowDivider()
+      CanvasSection(
         title: "Today's check-in",
         actionTitle: state.checkins.contains(where: { $0.day == summary.today }) ? "Update…" : nil,
         pencil: true,
@@ -1173,14 +1140,14 @@ struct BalanceView: View {
           }
         } else {
           EmptyState(
-            symbol: "sun.horizon", title: "How are you feeling?",
-            message: "A quick check-in helps shape a realistic plan for today.",
+            symbol: "sun.horizon", title: "A quick check-in helps shape a realistic plan for today.",
             buttonTitle: "Check in", compact: true
           ) { store.sheet = .checkin }
         }
       }
       if state.targets.contains(where: { $0.week > summary.week }) {
-        SectionCard(title: "Next week") {
+        RowDivider()
+        CanvasSection(title: "Next week") {
           VStack(spacing: 22) {
             ForEach(state.targets.filter { $0.week > summary.week }) { target in targetRow(target) }
           }
@@ -1220,9 +1187,9 @@ struct PracticeChart: View {
     Chart(days) { day in
       BarMark(
         x: .value("Day", chartDate(day.day), unit: .day), y: .value("Minutes", day.minutes),
-        width: .ratio(0.55)
+        width: days.count <= 7 ? .fixed(18) : .ratio(0.56)
       )
-      .foregroundStyle(AppStyle.accent.gradient).cornerRadius(4)
+      .foregroundStyle(AppStyle.accent.opacity(0.9)).cornerRadius(3)
     }
     .chartXAxis {
       AxisMarks(values: .automatic(desiredCount: min(days.count, 7))) { _ in
@@ -1278,10 +1245,8 @@ struct AnalyticsView: View {
   }
   var body: some View {
     let _ = locale
-    ScreenLayout {
+    ScreenLayout(maxWidth: 920) {
       HStack(spacing: 10) {
-        Text("Your progress").font(.system(size: 23, weight: .semibold))
-        Spacer(minLength: 12)
         Button {
           page += 1
         } label: {
@@ -1291,9 +1256,9 @@ struct AnalyticsView: View {
         .disabled(!canGoOlder)
         .help("Previous period")
         .accessibilityLabel(Text("Previous period"))
-        Text(periodTitle).font(.system(size: 12)).foregroundStyle(.secondary)
+        Text(periodTitle).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
           .lineLimit(1)
-          .frame(minWidth: 150)
+          .minimumScaleFactor(0.85)
         Button {
           page = max(0, page - 1)
         } label: {
@@ -1303,34 +1268,31 @@ struct AnalyticsView: View {
         .disabled(page == 0)
         .help("Next period")
         .accessibilityLabel(Text("Next period"))
-        Picker("", selection: $range) {
-          Text("7 days").tag(7)
-          Text("28 days").tag(28)
-          Text("90 days").tag(90)
-        }.pickerStyle(.segmented).labelsHidden().frame(width: 260).accessibilityLabel("Date range")
+        Spacer(minLength: 12)
+        CanvasTabs(options: [("7 days", 7), ("28 days", 28), ("90 days", 90)],
+                   selection: $range, label: "Date range")
+          .frame(width: 210)
       }
       .onChange(of: range) { _ in page = 0 }
-      HStack(spacing: 14) {
+      HStack(spacing: 38) {
         Metric(
-          title: "Practice", value: L("%@ hr", number(minutes / 60)), symbol: "clock",
-          color: AppStyle.blue)
+          title: "Practice", value: L("%@ hr", number(minutes / 60)))
         Metric(
-          title: "Experience", value: "\(number(days.reduce(0) { $0 + $1.xp })) XP",
-          symbol: "sparkles")
+          title: "Experience", value: "\(number(days.reduce(0) { $0 + $1.xp })) XP")
         Metric(
-          title: "Active days", value: "\(days.filter { $0.minutes > 0 }.count)",
-          symbol: "calendar.badge.checkmark", color: AppStyle.mint)
+          title: "Active days", value: "\(days.filter { $0.minutes > 0 }.count)")
       }
-      SectionCard(title: "Practice", detail: "Minutes per day") {
+      RowDivider()
+      CanvasSection(title: "Practice", detail: "Minutes per day") {
         if minutes > 0 {
           PracticeChart(days: days).frame(height: 190)
         } else {
           EmptyState(
-            symbol: "chart.bar.xaxis", title: "No sessions in this period",
-            message: "Nothing was logged in this period.", compact: true)
+            symbol: "chart.bar.xaxis", title: "No sessions in this period", compact: true)
         }
       }
-      SectionCard(title: "Discipline", detail: "28-day rolling index") {
+      RowDivider()
+      CanvasSection(title: "Discipline", detail: "28-day rolling index") {
         if days.contains(where: { $0.discipline != nil }) {
           Chart(days.filter { $0.discipline != nil }) { day in
             LineMark(x: .value("Day", chartDate(day.day)), y: .value("Index", day.discipline!))
@@ -1350,31 +1312,27 @@ struct AnalyticsView: View {
           }.frame(height: 145)
         } else {
           EmptyState(
-            symbol: "checkmark.seal", title: "Consistency takes a little time",
-            message: "Accept a daily plan or create a routine to start building your discipline history.", compact: true
+            symbol: "checkmark.seal",
+            title: "Accept a daily plan or create a routine to start building your discipline history.",
+            compact: true
           )
         }
       }
-      SectionCard(title: "Time by skill") {
-        if minutes == 0 {
-          EmptyState(
-            symbol: "circle.hexagongrid", title: "Nothing to compare just yet",
-            message: "Your practice will be grouped here by skill.", compact: true)
-        } else {
-          let totals = minutesBySkill
-          VStack(spacing: 20) {
-            ForEach(state.skills) { skill in
+      let totals = minutesBySkill
+      if !totals.isEmpty {
+        RowDivider()
+        CanvasSection(title: "Time by skill") {
+          VStack(spacing: 16) {
+            ForEach(state.skills.filter { totals[$0.id, default: 0] > 0 }) { skill in
               let skillMinutes = totals[skill.id, default: 0]
-              if skillMinutes > 0 {
-                VStack(alignment: .leading, spacing: 10) {
-                  HStack {
-                    Text(skill.displayTitle).font(.system(size: 13, weight: .medium))
-                    Spacer()
-                    Text(L("%@ min", number(skillMinutes))).font(.system(size: 12)).foregroundStyle(
-                      .secondary)
-                  }
-                  ProgressTrack(value: skillMinutes, total: minutes)
+              VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                  Text(skill.displayTitle).font(.system(size: 13, weight: .medium))
+                  Spacer()
+                  Text(L("%@ min", number(skillMinutes)))
+                    .font(.system(size: 12)).foregroundStyle(.secondary).monospacedDigit()
                 }
+                ProgressTrack(value: skillMinutes, total: minutes, height: 4)
               }
             }
           }
@@ -1402,31 +1360,31 @@ struct JournalView: View {
         || englishText($0.description).localizedCaseInsensitiveContains(search)
     }
   }
+  private var entriesByDay: [(day: String, entries: [JournalEntry])] {
+    Dictionary(grouping: entries, by: \.day)
+      .map { (day: $0.key, entries: $0.value) }
+      .sorted { $0.day > $1.day }
+  }
   var body: some View {
     let _ = locale
     PageFrame {
       VStack(alignment: .leading, spacing: 0) {
-        Surface(padding: 0) {
-          VStack(spacing: 0) {
-            HStack(spacing: 16) {
-              Picker("", selection: $tab) {
-                Text("Entries").tag(0)
-                Text("Activity").tag(1)
-              }.pickerStyle(.segmented).labelsHidden().frame(width: 240, alignment: .leading)
-                .accessibilityLabel("Journal filter")
-              Spacer(minLength: 12)
-              HStack(spacing: 7) {
-                Image(systemName: "magnifyingglass").foregroundStyle(Color.secondary)
-                TextField("Search journal", text: $search).textFieldStyle(.plain)
-              }.font(.system(size: 12)).padding(.horizontal, 10).padding(.vertical, 8).background(
-                Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8)
-              ).frame(width: 210)
-            }.padding(18)
-            RowDivider()
-            journalBody
-          }
-        }.frame(maxWidth: .infinity, maxHeight: .infinity)
-      }.padding(24)
+        HStack(spacing: 16) {
+          CanvasTabs(options: [("Entries", 0), ("Activity", 1)],
+                     selection: $tab, label: "Journal filter")
+            .frame(width: 166)
+          Spacer(minLength: 12)
+          CanvasSearchField(title: "Search journal", text: $search)
+            .frame(maxWidth: 226)
+        }
+        .padding(.bottom, 14)
+        RowDivider()
+        journalBody
+      }
+      .frame(maxWidth: 860)
+      .padding(.horizontal, 32)
+      .padding(.top, 20)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
   }
   @ViewBuilder private var journalBody: some View {
@@ -1434,36 +1392,42 @@ struct JournalView: View {
       if entries.isEmpty {
         EmptyState(
           symbol: search.isEmpty ? "square.and.pencil" : "magnifyingglass",
-          title: search.isEmpty ? "Make a note of what mattered" : "No matching entries",
-          message: search.isEmpty
-            ? "Capture a win, a lesson, or an idea for tomorrow."
-            : "Try a different search.",
-          buttonTitle: search.isEmpty ? nil : "Clear search"
-        ) { search = "" }.frame(maxHeight: .infinity)
+          title: search.isEmpty ? "No journal entries yet" : "No matching entries",
+          buttonTitle: search.isEmpty ? "New entry" : "Clear search"
+        ) {
+          if search.isEmpty { store.sheet = .journal } else { search = "" }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
       } else {
+        let groups = entriesByDay
         ScrollView {
-          LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(entries)) { entry in
-              VStack(alignment: .leading, spacing: 6) {
-                Text(dateText(entry.day)).font(.system(size: 11, weight: .medium)).foregroundStyle(
-                  Color.secondary)
-                Text(entry.text).font(.system(size: 13)).lineSpacing(4).textSelection(.enabled)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-              }.padding(.horizontal, 18).padding(.vertical, 14)
-              RowDivider()
+          LazyVStack(alignment: .leading, spacing: 22) {
+            ForEach(groups, id: \.day) { group in
+              VStack(alignment: .leading, spacing: 12) {
+                if group.day != groups.first?.day { RowDivider() }
+                Text(dateText(group.day)).font(.system(size: 12, weight: .medium))
+                  .foregroundStyle(.secondary)
+                  .accessibilityAddTraits(.isHeader)
+                ForEach(group.entries) { entry in
+                  Text(entry.text).font(.system(size: 14)).lineSpacing(5).textSelection(.enabled)
+                    .frame(maxWidth: 680, alignment: .leading)
+                }
+              }
             }
           }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.vertical, 22)
         }
       }
     } else if events.isEmpty {
       EmptyState(
         symbol: search.isEmpty ? "clock.arrow.circlepath" : "magnifyingglass",
-        title: search.isEmpty ? "A fresh start" : "No matching entries",
+        title: search.isEmpty ? "No activity yet" : "No matching entries",
         message: search.isEmpty
           ? "Your sessions, milestones, and plan changes will appear here."
           : "Try a different search.",
         buttonTitle: search.isEmpty ? nil : "Clear search"
-      ) { search = "" }.frame(maxHeight: .infinity)
+      ) { search = "" }.frame(maxHeight: .infinity, alignment: .top)
     } else {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
@@ -1478,7 +1442,7 @@ struct JournalView: View {
                 Spacer()
                 Text(dateText(event.at)).foregroundStyle(Color.secondary).font(.system(size: 11))
               }
-            }.padding(.horizontal, 18).padding(.vertical, 12)
+            }.padding(.vertical, 12)
             RowDivider()
           }
         }

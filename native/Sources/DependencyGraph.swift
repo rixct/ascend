@@ -41,32 +41,22 @@ struct DependencyGraph<Node: View>: View {
       ScrollViewReader { proxy in
         VStack(spacing: 0) {
           HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField(searchTitle, text: $search).textFieldStyle(.plain)
-              .onSubmit {
-                if let first = matches.first {
-                  select(first.id, proxy: proxy)
-                  search = ""
-                }
-              }
-            if !search.isEmpty {
-              Button {
+            CanvasSearchField(title: searchTitle, text: $search) {
+              if let first = matches.first {
+                select(first.id, proxy: proxy)
                 search = ""
-              } label: {
-                Image(systemName: "xmark.circle.fill")
               }
-              .buttonStyle(.plain).foregroundStyle(.secondary).help("Clear search")
             }
             Text(countText)
               .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize()
-          }.padding(18)
+          }.padding(.horizontal, 16).padding(.vertical, 11)
           RowDivider()
           ZStack(alignment: .topLeading) {
-            connections(
-              viewport: CGSize(
-                width: geometry.size.width, height: max(1, geometry.size.height - 106))
-            )
-            .allowsHitTesting(false).accessibilityHidden(true)
+            GeometryReader { viewport in
+              connections(viewport: viewport.size)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
             ScrollView([.horizontal, .vertical]) {
               HStack(
                 alignment: .top, spacing: SkillTreeLayout.columnSpacing - SkillTreeLayout.card.width
@@ -76,8 +66,7 @@ struct DependencyGraph<Node: View>: View {
                   let firstY = ids.first.flatMap { layout.frames[$0]?.minY } ?? 72
                   VStack(spacing: 0) {
                     Text(column == 0 ? L("Foundation") : L("Stage %d", column))
-                      .font(.system(size: 10, weight: .semibold)).tracking(1.4)
-                      .textCase(.uppercase).foregroundStyle(.secondary)
+                      .font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
                       .frame(width: SkillTreeLayout.card.width, height: 24, alignment: .leading)
                     Color.clear.frame(height: max(0, firstY - 48))
                     VStack(spacing: SkillTreeLayout.rowSpacing - SkillTreeLayout.card.height) {
@@ -176,12 +165,12 @@ struct DependencyGraph<Node: View>: View {
       context.translateBy(x: origin.x, y: origin.y)
       context.scaleBy(x: zoom, y: zoom)
       // The canvas is viewport-sized; scrolling a large tree never allocates a giant bitmap.
-      let step: CGFloat = 24
+      let step: CGFloat = 28
       for x in stride(from: floor(visible.minX / step) * step, through: visible.maxX, by: step) {
         for y in stride(from: floor(visible.minY / step) * step, through: visible.maxY, by: step) {
           context.fill(
-            Path(ellipseIn: CGRect(x: x, y: y, width: 1.5, height: 1.5)),
-            with: .color(.secondary.opacity(0.13)))
+            Path(ellipseIn: CGRect(x: x, y: y, width: 1.2, height: 1.2)),
+            with: .color(.secondary.opacity(0.12)))
         }
       }
       for edge in layout.edges {

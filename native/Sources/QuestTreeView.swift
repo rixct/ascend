@@ -38,22 +38,24 @@ struct QuestTreeView: View {
       VStack(spacing: 16) {
         header
         if scope.members.isEmpty {
-          Surface(fillHeight: true) {
-            EmptyState(
-              symbol: "point.3.filled.connected.trianglepath.dotted",
-              title: "Build this skill one quest at a time",
-              message: "Add a first quest, then connect the next steps through dependencies.",
-              buttonTitle: "Create a quest"
-            ) { store.newQuest(skillID: skill.id) }
-          }
+          EmptyState(
+            symbol: "point.3.filled.connected.trianglepath.dotted",
+            title: "Build this skill one quest at a time",
+            message: "Add a first quest, then connect the next steps through dependencies.",
+            buttonTitle: "Create a quest"
+          ) { store.newQuest(skillID: skill.id) }
+          .frame(maxHeight: .infinity, alignment: .top)
         } else {
-          HStack(alignment: .top, spacing: 16) {
-            Surface(padding: 0, fillHeight: true) { graph }
-              .clipShape(RoundedRectangle(cornerRadius: 16))
-            Surface(padding: 0, fillHeight: true) { inspector }.frame(width: 280)
+          HStack(alignment: .top, spacing: 0) {
+            graph
+            Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
+            inspector.frame(width: 280)
           }
         }
-      }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      .padding(.horizontal, 20)
+      .padding(.bottom, 16)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .onAppear(perform: normalizeSelection)
     .onChange(of: layoutKey) { _ in normalizeSelection() }
@@ -82,37 +84,31 @@ struct QuestTreeView: View {
     return .available
   }
   private var header: some View {
-    Surface(padding: 16) {
-      VStack(alignment: .leading, spacing: 12) {
-        HStack(spacing: 10) {
-          Button {
-            store.questTreeSkill = nil
-          } label: {
-            Label("All skills", systemImage: "point.3.connected.trianglepath.dotted")
-          }.buttonStyle(.borderless)
-          Image(systemName: "chevron.right").font(.system(size: 10)).foregroundStyle(.tertiary)
-          Text(skill.displayTitle).font(.system(size: 14, weight: .semibold)).lineLimit(1)
-          Spacer(minLength: 8)
-          Button {
-            store.sheet = .mastery(skill.id)
-          } label: {
-            Label("Verify mastery…", systemImage: "checkmark.seal")
-          }.buttonStyle(.borderedProminent).disabled(!canVerify)
-        }
-        HStack {
-          Text(L("%d / %d quests completed", done, scope.members.count))
-            .font(.system(size: 12, weight: .medium))
-          Spacer()
-          if !summary.unlocked_skills.contains(skill.id) {
-            HintButton(text: "Complete the parent skill requirements first.")
-          } else if !state.skillQuestsCompleted(skill.id) {
-            HintButton(text: "Complete all quests to verify this skill.")
-          }
-        }
-        ProgressTrack(
-          value: scope.members.isEmpty ? 0 : Double(done) / Double(scope.members.count) * 100)
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 10) {
+        Text(skill.displayTitle).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+        Spacer(minLength: 8)
+        Button {
+          store.sheet = .mastery(skill.id)
+        } label: {
+          Label("Verify mastery…", systemImage: "checkmark.seal")
+        }.buttonStyle(.borderedProminent).disabled(!canVerify)
       }
+      HStack {
+        Text(L("%d / %d quests completed", done, scope.members.count))
+          .font(.system(size: 12, weight: .medium))
+        Spacer()
+        if !summary.unlocked_skills.contains(skill.id) {
+          HintButton(text: "Complete the parent skill requirements first.")
+        } else if !state.skillQuestsCompleted(skill.id) {
+          HintButton(text: "Complete all quests to verify this skill.")
+        }
+      }
+      ProgressTrack(
+        value: scope.members.isEmpty ? 0 : Double(done) / Double(scope.members.count) * 100)
     }
+    .padding(.horizontal, 18)
+    .padding(.top, 12)
   }
   private var graph: some View {
     DependencyGraph(
@@ -342,8 +338,7 @@ private struct QuestTreeNode: View {
               ? "arrow.up.right.square" : (quest.kind == "Habit" ? "arrow.clockwise" : "checklist")
           )
           .font(.system(size: 13)).foregroundStyle(status.color)
-          .frame(width: 28, height: 28).background(
-            status.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+          .frame(width: 20, height: 24)
           Text(quest.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
             .frame(maxWidth: .infinity, alignment: .leading)
           Image(systemName: status.symbol).font(.system(size: 10)).foregroundStyle(status.color)
@@ -369,10 +364,10 @@ private struct QuestTreeNode: View {
       }.padding(14).frame(width: SkillTreeLayout.card.width, height: SkillTreeLayout.card.height)
         .background {
           RoundedRectangle(cornerRadius: 14).fill(
-            scheme == .dark ? Color(white: 0.19) : Color.white
+            AppChrome.island(scheme: scheme)
           )
           .overlay {
-            RoundedRectangle(cornerRadius: 14).fill(status.color.opacity(selected ? 0.1 : 0.025))
+            RoundedRectangle(cornerRadius: 14).fill(status.color.opacity(selected ? 0.08 : 0))
           }
           .overlay {
             RoundedRectangle(cornerRadius: 14).strokeBorder(
@@ -382,11 +377,11 @@ private struct QuestTreeNode: View {
               lineWidth: selected ? 2 : 1)
           }
           .shadow(
-            color: selected ? AppStyle.accent.opacity(0.12) : .black.opacity(0.07),
-            radius: selected ? 16 : 6, y: 3)
+            color: .black.opacity(scheme == .dark ? 0.12 : 0.04), radius: 4, y: 2)
         }.opacity(dimmed ? 0.3 : 1).contentShape(RoundedRectangle(cornerRadius: 14))
     }.buttonStyle(.plain).onHover { hovered = $0 }
       .accessibilityLabel("\(quest.title), \(L(status.title))")
       .accessibilityValue(L("%d saved, %d planned", saved, quest.sessionTarget))
+      .accessibilityAddTraits(selected ? .isSelected : [])
   }
 }

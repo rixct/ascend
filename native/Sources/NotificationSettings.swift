@@ -20,8 +20,10 @@ struct SettingsTabPicker: View {
   private var systemPicker: some View {
     Picker("Settings", selection: tabBinding) {
       ForEach(SettingsTab.allCases) { tab in
-        Label(LocalizedStringKey(tab.rawValue), systemImage: symbol(for: tab))
-          .help(LocalizedStringKey(tab.rawValue)).tag(tab)
+        Image(systemName: symbol(for: tab))
+          .accessibilityLabel(LocalizedStringKey(tab.rawValue))
+          .help(LocalizedStringKey(tab.rawValue))
+          .tag(tab)
       }
     }
     .pickerStyle(.segmented)
@@ -43,7 +45,7 @@ struct SettingsTabPicker: View {
 
   @available(macOS 26, *)
   private var glassPicker: some View {
-    LiquidGlassPlate(circular: false, leadingPad: 0, trailingPad: 0, verticalPad: 28) { dragged in
+    LiquidGlassPlate(circular: false, leadingPad: 0, verticalPad: 0) { dragged in
       HStack(spacing: 2) {
         ForEach(SettingsTab.allCases) { tab in
           segment(tab, acceptClick: !dragged)
@@ -83,16 +85,16 @@ struct SettingsTabPicker: View {
     return Button {
       if acceptClick { store.settingsTab = tab }
     } label: {
-      Label(LocalizedStringKey(tab.rawValue), systemImage: symbol(for: tab))
-        .font(.system(size: 12, weight: .medium))
+      Image(systemName: symbol(for: tab))
+        .font(.system(size: 14, weight: .medium))
         .foregroundStyle(selected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-        .padding(.horizontal, 10)
-        .frame(height: 28)
+        .frame(width: 36, height: 28)
         .contentShape(Capsule())
     }
     .buttonStyle(.plain)
     .help(LocalizedStringKey(tab.rawValue))
-    .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+    .accessibilityLabel(LocalizedStringKey(tab.rawValue))
+    .accessibilityAddTraits(selected ? .isSelected : [])
   }
 
   private func symbol(for tab: SettingsTab) -> String {
