@@ -49,9 +49,9 @@ struct SidebarIsland: View {
       .clipShape(shape)
       .background {
         shape
-          .fill(scheme == .dark ? Color(white: 0.17) : Color(white: 0.985))
+          .fill(AppChrome.island(scheme: scheme))
           .overlay { shape.strokeBorder(Color.primary.opacity(0.09), lineWidth: 1) }
-          .shadow(color: .black.opacity(scheme == .dark ? 0.25 : 0.10), radius: 8, y: 2)
+          .shadow(color: .black.opacity(scheme == .dark ? 0.19 : 0.07), radius: 8, y: 2)
       }
 
       resizeHandle

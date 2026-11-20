@@ -533,3 +533,14 @@
 "Sidebar" = "Боковая панель";
 "Hide Sidebar" = "Скрыть боковую панель";
 "Show Sidebar" = "Показать боковую панель";
+"Session actions" = "Действия с сессией";
+"Quest actions" = "Действия с квестом";
+"No skills yet" = "Навыков пока нет";
+"Add a skill to track practice and milestones." = "Добавьте навык, чтобы отслеживать практику и этапы.";
+"No verified outcomes yet" = "Подтверждённых результатов пока нет";
+"No sessions yet" = "Сессий пока нет";
+"Create a quest to plan what to practice." = "Создайте квест для того, что хотите практиковать.";
+"No active quests" = "Нет активных квестов";
+"No weekly goals yet" = "Целей на неделю пока нет";
+"No journal entries yet" = "Записей в журнале пока нет";
+"No activity yet" = "Событий пока нет";

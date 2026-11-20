@@ -53,46 +53,37 @@ struct TrailingSwitchStyle: ToggleStyle {
 
 enum AppChrome {
   static func canvas(style: String, scheme: ColorScheme) -> Color {
-    guard style == "colorful", scheme != .dark else { return Color(nsColor: .windowBackgroundColor) }
-    return scheme == .dark
-      ? Color(red: 0.11, green: 0.13, blue: 0.12)
-      : Color(red: 0.82, green: 0.875, blue: 0.83)
+    Color(nsColor: windowBackground(style: style, scheme: scheme))
+  }
+
+  static func windowBackground(style: String, scheme: ColorScheme) -> NSColor {
+    if scheme == .dark {
+      return NSColor(srgbRed: 0.106, green: 0.118, blue: 0.137, alpha: 1)
+    }
+    if style == "colorful" {
+      return NSColor(srgbRed: 0.919, green: 0.947, blue: 0.928, alpha: 1)
+    }
+    return NSColor(srgbRed: 0.967, green: 0.974, blue: 0.981, alpha: 1)
+  }
+
+  static func island(scheme: ColorScheme) -> Color {
+    scheme == .dark
+      ? Color(red: 0.146, green: 0.161, blue: 0.184)
+      : Color(red: 0.993, green: 0.995, blue: 0.998)
   }
 }
 
 struct Surface<Content: View>: View {
-  @Environment(\.locale) private var locale
   @Environment(\.colorScheme) private var scheme
-  @AppStorage("style") private var style = "minimal"
   var padding: CGFloat = 22
   @ViewBuilder let content: () -> Content
-  private var colors: [Color] {
-    if style == "colorful", scheme != .dark {
-      return scheme == .dark
-        ? [Color(red: 0.18, green: 0.22, blue: 0.19), Color(red: 0.14, green: 0.17, blue: 0.15)]
-        : [Color(red: 0.97, green: 0.985, blue: 0.965), Color(red: 0.925, green: 0.955, blue: 0.925)]
-    }
-    return [
-      scheme == .dark ? Color(white: 0.20) : Color.white,
-      scheme == .dark ? Color(white: 0.16) : Color(red: 0.985, green: 0.988, blue: 0.998),
-    ]
-  }
   var body: some View {
-    let _ = locale
+    let shape = RoundedRectangle(cornerRadius: 16)
     content().padding(padding).frame(maxWidth: .infinity, alignment: .topLeading)
-    .background {
-      RoundedRectangle(cornerRadius: 16, style: .continuous)
-        .fill(
-          LinearGradient(
-            colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .overlay {
-          RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(
-            scheme == .dark ? Color.white.opacity(0.075) : Color.black.opacity(0.055),
-            lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(scheme == .dark ? 0.16 : 0.045), radius: 14, x: 0, y: 5)
-    }
+      .background {
+        shape.fill(AppChrome.island(scheme: scheme))
+          .overlay { shape.strokeBorder(Color.primary.opacity(0.08)) }
+      }
   }
 }
 
@@ -129,10 +120,9 @@ struct PencilButton: View {
     Button(action: action) {
       Image(systemName: "pencil")
         .font(.system(size: 12, weight: .semibold))
-        .frame(width: 14, height: 14)
+        .frame(width: 26, height: 26)
     }
-    .buttonStyle(.bordered)
-    .controlSize(.small)
+    .buttonStyle(.borderless)
     .help(label)
     .accessibilityLabel(Text(label))
   }
@@ -149,9 +139,9 @@ struct CanvasSection<Content: View>: View {
   @ViewBuilder let content: () -> Content
   var body: some View {
     let _ = locale
-    VStack(alignment: .leading, spacing: 16) {
-      HStack(alignment: .center, spacing: 8) {
-        Text(L(title)).font(.system(size: 15, weight: .semibold))
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 8) {
+        Text(L(title)).font(.system(size: 15, weight: .semibold)).lineLimit(2)
           .accessibilityAddTraits(.isHeader)
         if let accessory { accessory }
         Spacer(minLength: 12)
@@ -171,12 +161,16 @@ struct CanvasSection<Content: View>: View {
 }
 
 struct ScreenLayout<Content: View>: View {
+  var maxWidth: CGFloat = 1016
   @ViewBuilder let content: () -> Content
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 24) { content() }
-        .frame(maxWidth: 1180, alignment: .leading).padding(28).frame(
-          maxWidth: .infinity, alignment: .top)
+      VStack(alignment: .leading, spacing: 28, content: content)
+        .frame(maxWidth: maxWidth, alignment: .leading)
+        .padding(.horizontal, 32)
+        .padding(.top, 20)
+        .padding(.bottom, 36)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
     .modifier(SoftScrollEdge())
   }
@@ -239,17 +233,9 @@ struct ThemeChooser: View {
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 9)
-      .foregroundStyle(selected ? AppStyle.choice : Color.primary.opacity(0.82))
-      .background {
-        Capsule().fill(
-          scheme == .dark
-            ? Color.white.opacity(selected ? 0.14 : 0.06)
-            : Color.white.opacity(selected ? 1 : 0.62))
-      }
-      .overlay {
-        Capsule().strokeBorder(
-          selected ? AppStyle.choice : Color.primary.opacity(0.06), lineWidth: selected ? 1.6 : 1)
-      }
+      .foregroundStyle(selected ? Color.primary : Color.secondary)
+      .background(selected ? AppStyle.choice.opacity(0.13) : .clear, in: Capsule())
+      .contentShape(Capsule())
     }
     .buttonStyle(.plain)
     .accessibilityAddTraits(selected ? .isSelected : [])
@@ -259,53 +245,46 @@ struct ThemeChooser: View {
     return Button {
       style = value
     } label: {
-      VStack(spacing: 10) {
-        stylePreview(value == "colorful")
-          .frame(maxWidth: .infinity, minHeight: 118, maxHeight: 118)
-          .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+      VStack(spacing: 8) {
+        stylePreview(value)
+          .frame(height: 88)
+          .clipShape(RoundedRectangle(cornerRadius: 12))
           .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-              .strokeBorder(selected ? AppStyle.choice : Color.clear, lineWidth: 2)
+            RoundedRectangle(cornerRadius: 12)
+              .strokeBorder(selected ? AppStyle.choice.opacity(0.75) : Color.primary.opacity(0.09))
           }
-          .shadow(color: .black.opacity(scheme == .dark ? 0.2 : 0.05), radius: 8, y: 3)
+          .accessibilityHidden(true)
         Text(L(title))
-          .font(.system(size: 15, weight: .semibold))
-          .foregroundStyle(selected ? AppStyle.choice : Color.primary)
+          .font(.system(size: 13, weight: selected ? .semibold : .medium))
+          .foregroundStyle(selected ? Color.primary : Color.secondary)
       }
     }
     .buttonStyle(.plain)
     .accessibilityAddTraits(selected ? .isSelected : [])
   }
-  @ViewBuilder private func stylePreview(_ colorful: Bool) -> some View {
-    if colorful {
-      ZStack {
-        (scheme == .dark
-          ? Color(red: 0.11, green: 0.13, blue: 0.12)
-          : Color(red: 0.82, green: 0.875, blue: 0.83))
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-          .fill(
-            scheme == .dark
-              ? Color(red: 0.18, green: 0.22, blue: 0.19)
-              : Color(red: 0.94, green: 0.97, blue: 0.94))
-          .padding(16)
-        VStack(alignment: .leading, spacing: 7) {
-          Capsule().fill(AppStyle.choice).frame(width: 54, height: 8)
-          Capsule().fill(AppStyle.mint).frame(width: 78, height: 8)
-          Capsule().fill(AppStyle.amber).frame(width: 42, height: 8)
-        }
-      }
-    } else {
-      VStack(alignment: .leading, spacing: 8) {
+  private func stylePreview(_ value: String) -> some View {
+    HStack(alignment: .top, spacing: 12) {
+      VStack(alignment: .leading, spacing: 6) {
         ForEach(0..<3, id: \.self) { index in
-          RoundedRectangle(cornerRadius: 3)
-            .fill(Color.primary.opacity(0.16))
-            .frame(width: 64 + CGFloat(index) * 18, height: 6)
+          Capsule().fill(Color.primary.opacity(index == 0 ? 0.25 : 0.12))
+            .frame(width: 20 + CGFloat(index) * 4, height: 3)
         }
       }
-      .padding(16)
+      .padding(8)
+      .frame(width: 48)
+      .frame(maxHeight: .infinity, alignment: .top)
+      .background(AppChrome.island(scheme: scheme), in: RoundedRectangle(cornerRadius: 6))
+      VStack(alignment: .leading, spacing: 7) {
+        Capsule().fill(Color.primary.opacity(0.45)).frame(width: 24, height: 7)
+        Capsule().fill(Color.primary.opacity(0.16)).frame(width: 40, height: 3)
+        RowDivider()
+        Capsule().fill(AppStyle.choice.opacity(0.48)).frame(width: 50, height: 4)
+      }
+      .padding(.vertical, 8)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-      .background(scheme == .dark ? Color(white: 0.20) : Color.white)
     }
+    .padding(8)
+    .background(AppChrome.canvas(style: value, scheme: scheme))
   }
 }
 
@@ -356,36 +335,123 @@ struct EmptyState: View {
   @Environment(\.locale) private var locale
   let symbol: String
   let title: String
-  let message: String
+  var message: String? = nil
   var buttonTitle: String? = nil
   var compact = false
   var action: (() -> Void)? = nil
   var body: some View {
     let _ = locale
-    VStack(spacing: compact ? 10 : 14) {
-      Image(systemName: symbol).font(.system(size: compact ? 22 : 27, weight: .light))
-        .foregroundStyle(AppStyle.accent)
-        .frame(width: compact ? 46 : 58, height: compact ? 46 : 58)
-        .background(
-          AppStyle.accent.opacity(0.085),
-          in: RoundedRectangle(cornerRadius: compact ? 13 : 17, style: .continuous))
-      VStack(spacing: 6) {
-        Text(L(title)).font(.system(size: compact ? 14 : 17, weight: .semibold)).foregroundStyle(
-          .primary)
-        Text(L(message)).font(.system(size: 13)).foregroundStyle(.secondary).lineSpacing(3)
-          .fixedSize(
-            horizontal: false, vertical: true)
-      }.frame(maxWidth: 330)
-      if let buttonTitle, let action {
-        Button(L(buttonTitle), action: action).buttonStyle(.borderedProminent).controlSize(.large)
-          .padding(.top, 5)
+    VStack(alignment: compact ? .leading : .center, spacing: compact ? 8 : 12) {
+      if !compact {
+        Image(systemName: symbol)
+          .font(.system(size: 28, weight: .light))
+          .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
+          .padding(.bottom, 4)
       }
-    }.multilineTextAlignment(.center).padding(.vertical, compact ? 14 : 36).padding(.horizontal, 16)
-      .frame(maxWidth: .infinity, minHeight: compact ? 145 : 260)
+      Text(L(title)).font(.system(size: compact ? 13 : 19, weight: compact ? .medium : .semibold))
+        .foregroundStyle(compact ? Color.secondary : Color.primary)
+      if let message {
+        Text(L(message)).font(.system(size: 13)).foregroundStyle(.secondary)
+          .lineSpacing(3)
+          .fixedSize(horizontal: false, vertical: true)
+          .frame(maxWidth: 340, alignment: compact ? .leading : .center)
+      }
+      if let buttonTitle, let action {
+        Button(L(buttonTitle), action: action)
+          .buttonStyle(.bordered)
+          .controlSize(.regular)
+      }
+    }
+    .multilineTextAlignment(compact ? .leading : .center)
+    .padding(.vertical, compact ? 8 : 58)
+    .frame(maxWidth: .infinity, alignment: compact ? .leading : .center)
+  }
+}
+
+struct CanvasSearchField: View {
+  let title: LocalizedStringKey
+  @Binding var text: String
+  var submit: (() -> Void)? = nil
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
+      TextField(title, text: $text)
+        .textFieldStyle(.plain)
+        .onSubmit { submit?() }
+      if !text.isEmpty {
+        Button { text = "" } label: {
+          Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Clear search")
+        .help("Clear search")
+      }
+    }
+    .font(.system(size: 12))
+    .padding(.horizontal, 10)
+    .frame(height: 30)
+    .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 7))
+  }
+}
+
+struct CanvasTabs: View {
+  let options: [(title: LocalizedStringKey, value: Int)]
+  @Binding var selection: Int
+  let label: LocalizedStringKey
+  @FocusState private var focused: Int?
+
+  var body: some View {
+    HStack(spacing: 0) {
+      ForEach(options, id: \.value) { option in
+        let selected = selection == option.value
+        Button {
+          selection = option.value
+        } label: {
+          Text(option.title)
+            .font(.system(size: 12, weight: selected ? .semibold : .medium))
+            .foregroundStyle(selected ? Color.primary : Color.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, 5)
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) {
+              if selected {
+                Capsule().fill(AppStyle.accent).frame(width: 18, height: 2)
+              }
+            }
+        }
+        .buttonStyle(.plain)
+        .focused($focused, equals: option.value)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+      }
+    }
+    .onMoveCommand { direction in
+      guard let current = options.firstIndex(where: { $0.value == selection }) else { return }
+      let next: Int
+      switch direction {
+      case .left: next = current - 1
+      case .right: next = current + 1
+      default: return
+      }
+      guard options.indices.contains(next) else { return }
+      selection = options[next].value
+      focused = selection
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel(Text(label))
   }
 }
 
 struct RowDivider: View {
-  @Environment(\.locale) private var locale
-  var body: some View { Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1) }
+  @Environment(\.displayScale) private var displayScale
+  var body: some View {
+    Rectangle().fill(Color.primary.opacity(0.12)).frame(height: 1 / displayScale)
+      .accessibilityHidden(true)
+  }
 }

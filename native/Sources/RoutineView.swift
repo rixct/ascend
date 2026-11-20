@@ -19,20 +19,22 @@ struct DailyRoutineView: View {
       detail: items.isEmpty ? nil : L("%d of %d", checked, items.count),
       accessory: AnyView(addButton)
     ) {
-      VStack(alignment: .leading, spacing: 8) {
+      VStack(alignment: .leading, spacing: 0) {
         if items.isEmpty && !adding {
-          HStack(spacing: 6) {
-            Text("Small steps, every day").font(.system(size: 13, weight: .medium))
-            HintButton(text: "Create a checklist that contributes to your discipline.")
-          }
+          Text("Create a checklist that contributes to your discipline.")
+            .font(.system(size: 13))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 8)
         }
         ForEach(items) { item in
+          if item.id != items.first?.id { RowDivider() }
           row(item)
         }
         if adding {
           TextField(L("New task"), text: $draft)
             .textFieldStyle(.roundedBorder)
-            .controlSize(.large)
+            .padding(.top, items.isEmpty ? 0 : 8)
             .focused($draftFocused)
             .onSubmit { commitDraft() }
             .onExitCommand {
@@ -86,28 +88,25 @@ struct DailyRoutineView: View {
     .help("Add item")
   }
   private func row(_ item: RoutineChecklistItem) -> some View {
-    HStack(alignment: .center, spacing: 8) {
+    Toggle(isOn: Binding(get: { item.completed }, set: { value in
+      guard let day = summary.routine_today?.day else { return }
+      store.send("routine_check", ["day": day, "id": item.id, "completed": value])
+    })) {
       Text(item.title)
         .font(.system(size: 13))
         .foregroundStyle(item.completed ? Color.secondary : Color.primary)
         .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .contextMenu {
-          Button(role: .destructive) { pendingDelete = item } label: {
-            Label("Delete", systemImage: "trash")
-          }
-          .disabled(store.busy)
-        }
-      Toggle(isOn: Binding(get: { item.completed }, set: { value in
-        guard let day = summary.routine_today?.day else { return }
-        store.send("routine_check", ["day": day, "id": item.id, "completed": value])
-      })) { Text(verbatim: "") }
-        .toggleStyle(.checkbox)
-        .labelsHidden()
-        .fixedSize()
+    }
+    .toggleStyle(.checkbox)
+    .disabled(store.busy)
+    .padding(.vertical, 8)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .contentShape(Rectangle())
+    .contextMenu {
+      Button(role: .destructive) { pendingDelete = item } label: {
+        Label("Delete", systemImage: "trash")
+      }
         .disabled(store.busy)
-        .accessibilityLabel(item.title)
     }
     .accessibilityAction(named: Text("Remove routine item")) { pendingDelete = item }
   }

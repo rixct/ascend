@@ -310,8 +310,7 @@ private struct TreeNode: View {
         HStack(spacing: 8) {
           Image(systemName: treeDomain(skill.domain).symbol)
             .font(.system(size: 13)).foregroundStyle(status.color)
-            .frame(width: 28, height: 28).background(
-              status.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+            .frame(width: 20, height: 24)
           Text(skill.displayTitle).font(.system(size: 13, weight: .semibold)).lineLimit(2)
             .frame(maxWidth: .infinity, alignment: .leading)
           Image(systemName: status.symbol).font(.system(size: 10)).foregroundStyle(status.color)
@@ -340,9 +339,9 @@ private struct TreeNode: View {
       .padding(14).frame(width: SkillTreeLayout.card.width, height: SkillTreeLayout.card.height)
       .background {
         RoundedRectangle(cornerRadius: 14)
-          .fill(scheme == .dark ? Color(white: 0.19) : Color.white)
+          .fill(AppChrome.island(scheme: scheme))
           .overlay {
-            RoundedRectangle(cornerRadius: 14).fill(status.color.opacity(selected ? 0.1 : 0.025))
+            RoundedRectangle(cornerRadius: 14).fill(status.color.opacity(selected ? 0.08 : 0))
           }
           .overlay {
             RoundedRectangle(cornerRadius: 14).strokeBorder(
@@ -352,8 +351,7 @@ private struct TreeNode: View {
               lineWidth: selected ? 2 : 1)
           }
           .shadow(
-            color: selected ? AppStyle.accent.opacity(0.12) : Color.black.opacity(0.07),
-            radius: selected ? 16 : 6, y: 3)
+            color: .black.opacity(scheme == .dark ? 0.12 : 0.04), radius: 4, y: 2)
       }
       .opacity(dimmed ? 0.3 : 1).contentShape(RoundedRectangle(cornerRadius: 14))
     }

@@ -128,7 +128,8 @@ struct SettingsView: View {
     }
     .id(store.settingsTab)
     .animation(nil, value: store.settingsTab)
-    .frame(maxWidth: 880)
+    .frame(maxWidth: 760)
+    .padding(.horizontal, 10)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 }

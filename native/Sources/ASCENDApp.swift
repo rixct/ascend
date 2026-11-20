@@ -624,12 +624,8 @@ struct RootView: View {
   }
 
   private func paintWindow() {
-    let color: NSColor =
-      style == "colorful" && scheme != .dark
-      ? NSColor(srgbRed: 0.82, green: 0.875, blue: 0.83, alpha: 1)
-      : .windowBackgroundColor
     for window in NSApp.windows where window.title == "ASCEND" {
-      window.backgroundColor = color
+      window.backgroundColor = AppChrome.windowBackground(style: style, scheme: scheme)
     }
   }
   private func goBack() {
