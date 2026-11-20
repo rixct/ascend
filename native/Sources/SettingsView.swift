@@ -47,21 +47,42 @@ struct SettingsView: View {
   @AppStorage("style") private var style = "minimal"
   @AppStorage("strictModeEnabled") private var strictModeEnabled = false
   @StateObject private var draft = ProfileDraft()
+  var workspaceControls: WorkspaceControls? = nil
+
   var body: some View {
     let _ = locale
-    settingsCard
-      .background {
-        AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea()
-      }
-      .modifier(ClearSettingsToolbar())
-      .onAppear(perform: adoptProfile)
-      .onChange(of: store.state?.settings.name) { _ in adoptProfile() }
-      .onChange(of: store.profileGeneration) { _ in
-        if draft.load(store.state?.settings, replacing: true) {
-          strictModeEnabled = store.state?.settings.strict_mode == true
+    Group {
+      if let workspaceControls {
+        VStack(spacing: 0) {
+          WorkspaceHeader(sidebarHidden: workspaceControls.showSidebar != nil) {
+            workspaceControls
+            Spacer(minLength: 0)
+            ViewThatFits(in: .horizontal) {
+              SettingsTabPicker(verticalPad: 0)
+              SettingsTabPicker(verticalPad: 0).labelStyle(.iconOnly)
+            }
+            Spacer(minLength: 0)
+            doneButton(inWorkspace: true)
+          }
+          .zIndex(1)
+          settingsCard
         }
+      } else {
+        settingsCard
+          .modifier(ClearSettingsToolbar())
+          .toolbar { settingsDone }
       }
-      .toolbar { settingsDone }
+    }
+    .background {
+      AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea()
+    }
+    .onAppear(perform: adoptProfile)
+    .onChange(of: store.state?.settings.name) { _ in adoptProfile() }
+    .onChange(of: store.profileGeneration) { _ in
+      if draft.load(store.state?.settings, replacing: true) {
+        strictModeEnabled = store.state?.settings.strict_mode == true
+      }
+    }
   }
   private func finishSettings() {
     draft.save(store: store, strict: strictModeEnabled) {
@@ -75,16 +96,24 @@ struct SettingsView: View {
   @ToolbarContentBuilder private var settingsDone: some ToolbarContent {
     if #available(macOS 26, *) {
       ToolbarItem(placement: .primaryAction) {
-        GlassTextButton(title: "Done", enabled: draft.canSave(busy: store.busy)) {
-          finishSettings()
-        }
+        doneButton(inWorkspace: false)
       }
       .sharedBackgroundVisibility(.hidden)
     } else {
       ToolbarItem(placement: .primaryAction) {
-        Button("Done", action: finishSettings)
-          .disabled(!draft.canSave(busy: store.busy))
+        doneButton(inWorkspace: false)
       }
+    }
+  }
+  @ViewBuilder private func doneButton(inWorkspace: Bool) -> some View {
+    let enabled = draft.canSave(busy: store.busy)
+    if #available(macOS 26, *) {
+      GlassTextButton(
+        title: "Done", enabled: enabled, leadingPad: inWorkspace ? 0 : 28,
+        trailingPad: inWorkspace ? 0 : 8, verticalPad: inWorkspace ? 0 : 28,
+        action: finishSettings)
+    } else {
+      Button("Done", action: finishSettings).disabled(!enabled)
     }
   }
   private var settingsCard: some View {

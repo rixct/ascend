@@ -52,8 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         .environment(\.locale, AppLanguage.resolved(language).locale)
     }
     .defaultSize(width: 1120, height: 760)
-    .windowStyle(.titleBar)
-    .windowToolbarStyle(.unified)
+    .windowStyle(.hiddenTitleBar)
     .commands {
       CommandGroup(after: .newItem) {
         Button(L("New quest…")) { store.newQuest() }
@@ -265,7 +264,7 @@ private struct WindowToolbar: View {
 private struct GlassBackButton: View {
   let action: () -> Void
   var body: some View {
-    LiquidGlassPlate(circular: true, leadingPad: 4, trailingPad: 28) { dragged in
+    LiquidGlassPlate(circular: true, leadingPad: 0, verticalPad: 0) { dragged in
       Image(systemName: "chevron.left")
         .font(.system(size: 15, weight: .medium))
         .frame(width: 36, height: 36)
@@ -275,6 +274,7 @@ private struct GlassBackButton: View {
         .help(LocalizedStringKey("Back"))
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(LocalizedStringKey("Back"))
+        .accessibilityAction { action() }
     }
   }
 }
@@ -322,23 +322,9 @@ private struct GlassTextPlate: View {
         .opacity(enabled ? 1 : 0.45)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(LocalizedStringKey(title))
+        .accessibilityAction { if enabled { action() } }
     }
     .allowsHitTesting(enabled)
-  }
-}
-
-private struct HideToolbarTitle: ViewModifier {
-  var hidden: Bool
-  @ViewBuilder func body(content: Content) -> some View {
-    if hidden {
-      if #available(macOS 15, *) {
-        content.toolbar(removing: .title)
-      } else {
-        content
-      }
-    } else {
-      content
-    }
   }
 }
 
@@ -354,7 +340,7 @@ private struct LiquidWindowToolbar: View {
     }
   }
   private var glass: some View {
-    LiquidGlassPlate(circular: tools.count <= 1, trailingPad: 8) { dragged in
+    LiquidGlassPlate(circular: tools.count <= 1, leadingPad: 0, verticalPad: 0) { dragged in
       HStack(spacing: 0) {
         ForEach(Array(tools.enumerated()), id: \.element.id) { index, tool in
           WindowToolButton(
@@ -536,42 +522,13 @@ private struct WindowToolButton: View {
   }
 }
 
-private struct SidebarAccount: View {
-  let name: String
-  let avatar: String?
-  let selected: Bool
-  let action: () -> Void
-  var body: some View {
-    HStack(spacing: 8) {
-      ProfileAvatar(encodedImage: avatar, size: 32, circular: true)
-      Text(name.isEmpty ? L("Character") : name)
-        .font(.system(size: 13, weight: .medium))
-        .lineLimit(1)
-        .foregroundStyle(selected ? Color.white : Color.primary)
-      Spacer(minLength: 0)
-    }
-    .padding(.horizontal, 8)
-    .padding(.vertical, 6)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .fill(selected ? Color.accentColor : Color.primary.opacity(0.001))
-    }
-    .padding(.horizontal, 10)
-    .padding(.bottom, 12)
-    .contentShape(Rectangle())
-    .onTapGesture(perform: action)
-    .accessibilityAddTraits(.isButton)
-    .accessibilityLabel(name.isEmpty ? L("Character") : name)
-  }
-}
-
 struct RootView: View {
   @EnvironmentObject var notifications: Notifications
   @Environment(\.openWindow) private var openWindow
   @Environment(\.locale) private var locale
   @Environment(\.colorScheme) private var scheme
   @AppStorage("style") private var style = "minimal"
+  @SceneStorage("mainSidebarVisible") private var sidebarVisible = true
   @EnvironmentObject var store: Store
   var body: some View {
     let _ = locale
@@ -582,80 +539,7 @@ struct RootView: View {
         } else if store.focusMode {
           FocusView(state: state, summary: summary)
         } else {
-          NavigationSplitView {
-            List(Page.menu, selection: $store.page) { page in
-              Label(LocalizedStringKey(page.rawValue), systemImage: page.symbol).font(
-                .system(size: 13, weight: .medium)
-              ).padding(.vertical, 4).tag(page)
-            }
-            .listStyle(.sidebar)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-              SidebarAccount(
-                name: state.settings.name, avatar: state.settings.avatar,
-                selected: store.page == .character
-              ) {
-                store.endSkillEditing()
-                store.page = .character
-              }
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 204, max: 250)
-            .onChange(of: store.page) { page in
-              if page != .skills { store.endSkillEditing() }
-              if page != .skillTree && page != .settings { store.questTreeSkill = nil }
-            }
-          } detail: {
-            detailPage(store.page ?? .dashboard, state: state, summary: summary)
-              .background {
-                SettingsBackSwipe(enabled: store.page == .settings) {
-                  goBack()
-                }
-              }
-              .navigationTitle(
-                store.page == .settings
-                  ? ""
-                  : L(
-                    store.page == .skillTree && store.questTreeSkill != nil
-                      ? "Quest tree" : (store.page ?? .dashboard).rawValue)
-              )
-              .modifier(HideToolbarTitle(hidden: store.page == .settings))
-              .toolbar {
-                if store.page == .settings || store.page == .skillTree {
-                  if #available(macOS 26, *) {
-                    ToolbarItem(placement: .navigation) {
-                      GlassBackButton(action: goBack)
-                    }
-                    .sharedBackgroundVisibility(.hidden)
-                  } else {
-                    ToolbarItem(placement: .navigation) {
-                      Button(action: goBack) {
-                        Image(systemName: "chevron.left")
-                      }
-                      .help(LocalizedStringKey("Back"))
-                    }
-                  }
-                  if store.page == .settings {
-                    if #available(macOS 26, *) {
-                      ToolbarItem(placement: .principal) { SettingsTabPicker() }
-                        .sharedBackgroundVisibility(.hidden)
-                    } else {
-                      ToolbarItem(placement: .principal) { SettingsTabPicker() }
-                    }
-                  }
-                }
-                if !windowTools(store).isEmpty {
-                  if #available(macOS 26, *) {
-                    ToolbarItem(placement: .primaryAction) {
-                      WindowToolbar()
-                    }
-                    .sharedBackgroundVisibility(.hidden)
-                  } else {
-                    ToolbarItem(placement: .primaryAction) {
-                      WindowToolbar()
-                    }
-                  }
-                }
-              }
-          }
+          workspace(state: state, summary: summary)
         }
       } else {
         ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -671,6 +555,7 @@ struct RootView: View {
     }
     .frame(minWidth: 860, minHeight: 580)
     .background(AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea())
+    .modifier(WorkspaceWindowChrome())
     .onAppear { paintWindow() }
     .onChange(of: style) { _ in paintWindow() }
     .onChange(of: scheme) { _ in paintWindow() }
@@ -706,6 +591,44 @@ struct RootView: View {
     }
   }
 
+  private func workspace(state: GameState, summary: Summary) -> some View {
+    let page = store.page ?? .dashboard
+    return HStack(spacing: 0) {
+      if sidebarVisible {
+        SidebarIsland(profile: state.settings) { sidebarVisible = false }
+      }
+      VStack(spacing: 0) {
+        if page != .settings {
+          WorkspaceHeader(sidebarHidden: !sidebarVisible) {
+            controls(for: page)
+            Text(
+              LocalizedStringKey(
+                page == .skillTree && store.questTreeSkill != nil ? "Quest tree" : page.rawValue)
+            )
+              .font(.system(size: 17, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 12)
+            WindowToolbar()
+          }
+          .zIndex(1)
+        }
+        detailPage(page, state: state, summary: summary)
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    .ignoresSafeArea(.container, edges: .top)
+    .onChange(of: store.page) { page in
+      if page != .skills { store.endSkillEditing() }
+      if page != .skillTree && page != .settings { store.questTreeSkill = nil }
+    }
+  }
+
+  private func controls(for page: Page) -> WorkspaceControls {
+    WorkspaceControls(
+      showSidebar: sidebarVisible ? nil : { sidebarVisible = true },
+      goBack: page == .settings || page == .skillTree ? goBack : nil)
+  }
+
   private func paintWindow() {
     let color: NSColor =
       style == "colorful" && scheme != .dark
@@ -735,13 +658,35 @@ struct RootView: View {
     case .balance: BalanceView(state: state, summary: summary)
     case .analytics: AnalyticsView(state: state, summary: summary)
     case .journal: JournalView(state: state)
-    case .settings: SettingsView()
+    case .settings:
+      SettingsView(workspaceControls: controls(for: page))
+        .background { SettingsBackSwipe(onBack: goBack) }
+    }
+  }
+}
+
+struct WorkspaceControls: View {
+  let showSidebar: (() -> Void)?
+  let goBack: (() -> Void)?
+
+  var body: some View {
+    if let showSidebar {
+      SidebarToggle(visible: false, action: showSidebar)
+    }
+    if let goBack {
+      if #available(macOS 26, *) {
+        GlassBackButton(action: goBack)
+      } else {
+        Button(action: goBack) { Image(systemName: "chevron.left").frame(width: 30, height: 30) }
+          .buttonStyle(.borderless)
+          .help("Back")
+          .accessibilityLabel("Back")
+      }
     }
   }
 }
 
 private struct SettingsBackSwipe: NSViewRepresentable {
-  var enabled: Bool
   var onBack: () -> Void
 
   func makeCoordinator() -> Coordinator {
@@ -754,7 +699,6 @@ private struct SettingsBackSwipe: NSViewRepresentable {
     return view
   }
   func updateNSView(_ nsView: NSView, context: Context) {
-    context.coordinator.enabled = enabled
     context.coordinator.onBack = onBack
   }
   static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
@@ -762,7 +706,6 @@ private struct SettingsBackSwipe: NSViewRepresentable {
   }
 
   final class Coordinator {
-    var enabled = false
     var onBack: () -> Void
     var monitor: Any?
     weak var view: NSView?
@@ -785,7 +728,7 @@ private struct SettingsBackSwipe: NSViewRepresentable {
     deinit { stop() }
     func handle(_ event: NSEvent) -> NSEvent? {
       guard let window = view?.window, event.window === window, window.attachedSheet == nil,
-        enabled, event.hasPreciseScrollingDeltas
+        event.hasPreciseScrollingDeltas
       else { return event }
       let dx = event.scrollingDeltaX
       let dy = event.scrollingDeltaY

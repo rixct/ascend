@@ -7,6 +7,7 @@ struct SettingsTabPicker: View {
   @Environment(\.locale) private var locale
   @Environment(\.colorScheme) private var scheme
   @State private var frames: [SettingsTab: CGRect] = [:]
+  var verticalPad: CGFloat = 28
 
   var body: some View {
     let _ = locale
@@ -43,7 +44,7 @@ struct SettingsTabPicker: View {
 
   @available(macOS 26, *)
   private var glassPicker: some View {
-    LiquidGlassPlate(circular: false, leadingPad: 0, trailingPad: 0, verticalPad: 28) { dragged in
+    LiquidGlassPlate(circular: false, leadingPad: 0, trailingPad: 0, verticalPad: verticalPad) { dragged in
       HStack(spacing: 2) {
         ForEach(SettingsTab.allCases) { tab in
           segment(tab, acceptClick: !dragged)

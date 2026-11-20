@@ -530,3 +530,6 @@
 "The quest closes on the last planned session." = "The quest closes on the last planned session.";
 "Paused and unfinished quests still block verification. Cancelled and missed quests do not." = "Paused and unfinished quests still block verification. Cancelled and missed quests do not.";
 "Weight is above 0 and at most 10. Sessions and days count after 5 credited minutes." = "Weight is above 0 and at most 10. Sessions and days count after 5 credited minutes.";
+"Sidebar" = "Sidebar";
+"Hide Sidebar" = "Hide Sidebar";
+"Show Sidebar" = "Show Sidebar";

@@ -530,3 +530,6 @@
 "The quest closes on the last planned session." = "Квест закрывается на последней запланированной сессии.";
 "Paused and unfinished quests still block verification. Cancelled and missed quests do not." = "Пауза и незавершённые квесты по-прежнему блокируют подтверждение. Отменённые и пропущенные — нет.";
 "Weight is above 0 and at most 10. Sessions and days count after 5 credited minutes." = "Вес больше 0 и не больше 10. Сессии и дни считаются после 5 зачтённых минут.";
+"Sidebar" = "Боковая панель";
+"Hide Sidebar" = "Скрыть боковую панель";
+"Show Sidebar" = "Показать боковую панель";
