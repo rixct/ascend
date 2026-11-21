@@ -202,6 +202,7 @@
 "Closed" = "Закрытые";
 "All" = "Все";
 "Quest status" = "Статус квеста";
+"Search" = "Поиск";
 "Search quests" = "Поиск квестов";
 "Search journal" = "Поиск по журналу";
 "No matching entries" = "Нет подходящих записей";
@@ -213,6 +214,7 @@
 "Turn something you want to do into a quest with a clear outcome." = "Превратите задуманное в квест с понятным результатом.";
 "Try a different search or browse all your quests." = "Попробуйте другой запрос или посмотрите все квесты.";
 "Clear search" = "Очистить поиск";
+"Close search" = "Закрыть поиск";
 "Skill" = "Навык";
 "Time" = "Время";
 "Status" = "Статус";
@@ -227,7 +229,6 @@
 "Add goal…" = "Добавить цель…";
 "Give your week a direction" = "Задайте направление недели";
 "Set a target for a skill you want to develop." = "Поставьте цель для навыка, который хотите развивать.";
-"Add a weekly goal" = "Добавить недельную цель";
 "Today's check-in" = "Самочувствие сегодня";
 "Update…" = "Обновить…";
 "Energy" = "Энергия";

@@ -71,6 +71,10 @@ enum AppChrome {
       ? Color(red: 0.146, green: 0.161, blue: 0.184)
       : Color(red: 0.993, green: 0.995, blue: 0.998)
   }
+
+  static func sidebar(scheme: ColorScheme) -> Color {
+    scheme == .dark ? island(scheme: scheme) : .white
+  }
 }
 
 struct Surface<Content: View>: View {
@@ -273,7 +277,11 @@ struct ThemeChooser: View {
       .padding(8)
       .frame(width: 48)
       .frame(maxHeight: .infinity, alignment: .top)
-      .background(AppChrome.island(scheme: scheme), in: RoundedRectangle(cornerRadius: 6))
+      .background {
+        let shape = RoundedRectangle(cornerRadius: 6)
+        shape.fill(AppChrome.sidebar(scheme: scheme))
+          .overlay { shape.strokeBorder(Color.primary.opacity(0.09)) }
+      }
       VStack(alignment: .leading, spacing: 7) {
         Capsule().fill(Color.primary.opacity(0.45)).frame(width: 24, height: 7)
         Capsule().fill(Color.primary.opacity(0.16)).frame(width: 40, height: 3)
@@ -369,33 +377,11 @@ struct EmptyState: View {
   }
 }
 
-struct CanvasSearchField: View {
-  let title: LocalizedStringKey
-  @Binding var text: String
-  var submit: (() -> Void)? = nil
-
-  var body: some View {
-    HStack(spacing: 8) {
-      Image(systemName: "magnifyingglass")
-        .foregroundStyle(.secondary)
-        .accessibilityHidden(true)
-      TextField(title, text: $text)
-        .textFieldStyle(.plain)
-        .onSubmit { submit?() }
-      if !text.isEmpty {
-        Button { text = "" } label: {
-          Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
-        }
-        .buttonStyle(.borderless)
-        .accessibilityLabel("Clear search")
-        .help("Clear search")
-      }
-    }
-    .font(.system(size: 12))
-    .padding(.horizontal, 10)
-    .frame(height: 30)
-    .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 7))
-  }
+enum WorkspaceHeaderLayout {
+  static let controlSize: CGFloat = 40
+  static let sideInset: CGFloat = 12
+  static let topInset: CGFloat = 12
+  static let bottomInset: CGFloat = 10
 }
 
 struct CanvasTabs: View {

@@ -6,6 +6,8 @@ struct QuestTreeView: View {
   let skill: Skill
   let state: GameState
   let summary: Summary
+  @Binding var search: String
+  let searchSubmission: UUID
   private let scope: QuestTreeScope
   private let index: [String: Quest]
   private let fulfilled: Set<String>
@@ -21,10 +23,12 @@ struct QuestTreeView: View {
   private var done: Int { scope.members.filter { fulfilled.contains($0.id) }.count }
   private var canVerify: Bool { state.canVerifySkill(skill.id, summary: summary) && !store.busy }
 
-  init(skill: Skill, state: GameState, summary: Summary) {
+  init(skill: Skill, state: GameState, summary: Summary, search: Binding<String>, searchSubmission: UUID) {
     self.skill = skill
     self.state = state
     self.summary = summary
+    _search = search
+    self.searchSubmission = searchSubmission
     scope = QuestTreeScope(skillID: skill.id, quests: state.quests)
     index = Dictionary(state.quests.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
     fulfilled = state.fulfilledQuestIDs
@@ -119,7 +123,7 @@ struct QuestTreeView: View {
       },
       selected: $selected, focusRequest: focusRequest,
       route: quest.map { layout.ancestors(of: $0.id, quests: scope.quests) } ?? [],
-      fulfilled: fulfilled, searchTitle: "Find a quest",
+      fulfilled: fulfilled, search: $search, searchSubmission: searchSubmission,
       countText: L("%d quests", scope.members.count),
       legend: [
         .init(title: "Available", color: AppStyle.accent),

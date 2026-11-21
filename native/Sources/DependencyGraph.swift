@@ -22,12 +22,12 @@ struct DependencyGraph<Node: View>: View {
   let focusRequest: UUID
   let route: Set<String>
   let fulfilled: Set<String>
-  let searchTitle: LocalizedStringKey
+  @Binding var search: String
+  let searchSubmission: UUID
   let countText: String
   let legend: [DependencyGraphLegend]
   let onPick: (String) -> Void
   @ViewBuilder let node: (String, Bool) -> Node
-  @State private var search = ""
   @State private var zoom: CGFloat = 0.85
   @State private var origin = CGPoint.zero
   private var matches: [DependencyGraphItem] {
@@ -40,17 +40,6 @@ struct DependencyGraph<Node: View>: View {
     GeometryReader { geometry in
       ScrollViewReader { proxy in
         VStack(spacing: 0) {
-          HStack(spacing: 12) {
-            CanvasSearchField(title: searchTitle, text: $search) {
-              if let first = matches.first {
-                select(first.id, proxy: proxy)
-                search = ""
-              }
-            }
-            Text(countText)
-              .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize()
-          }.padding(.horizontal, 16).padding(.vertical, 11)
-          RowDivider()
           ZStack(alignment: .topLeading) {
             GeometryReader { viewport in
               connections(viewport: viewport.size)
@@ -109,6 +98,7 @@ struct DependencyGraph<Node: View>: View {
               }.foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
+            Text(countText).font(.system(size: 11)).foregroundStyle(.secondary)
             Button {
               zoom = max(0.35, zoom - 0.15)
             } label: {
@@ -142,6 +132,12 @@ struct DependencyGraph<Node: View>: View {
         }
         .onChange(of: focusRequest) { _ in
           if let selected { proxy.scrollTo(selected, anchor: .center) }
+        }
+        .onChange(of: searchSubmission) { _ in
+          if let first = matches.first {
+            select(first.id, proxy: proxy)
+            search = ""
+          }
         }
       }
     }
