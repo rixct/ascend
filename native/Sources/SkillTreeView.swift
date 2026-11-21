@@ -6,6 +6,8 @@ struct SkillTreeView: View {
   @Environment(\.locale) private var locale
   let state: GameState
   let summary: Summary
+  @Binding var search: String
+  let searchSubmission: UUID
   @State private var layoutCache = SkillTreeLayoutCache()
   private let layoutKey: String
   private var layout: SkillTreeLayout { layoutCache.layout(skills: state.skills, key: layoutKey) }
@@ -16,9 +18,11 @@ struct SkillTreeView: View {
   private let questsBySkill: [String: [Quest]]
   private let fulfilled: Set<String>
   @State private var focusRequest = UUID()
-  init(state: GameState, summary: Summary) {
+  init(state: GameState, summary: Summary, search: Binding<String>, searchSubmission: UUID) {
     self.state = state
     self.summary = summary
+    _search = search
+    self.searchSubmission = searchSubmission
     layoutKey = SkillTreeLayout.signature(state.skills)
     unlocked = Set(summary.unlocked_skills)
     questsBySkill = Dictionary(grouping: state.quests, by: \.skill_id)
@@ -31,7 +35,10 @@ struct SkillTreeView: View {
     let _ = locale
     Group {
       if let id = store.questTreeSkill, let focused = state.skills.first(where: { $0.id == id }) {
-        QuestTreeView(skill: focused, state: state, summary: summary).id(id)
+        QuestTreeView(
+          skill: focused, state: state, summary: summary,
+          search: $search, searchSubmission: searchSubmission
+        ).id(id)
       } else {
         overallTree
       }
@@ -91,7 +98,8 @@ struct SkillTreeView: View {
       },
       selected: $selected, focusRequest: focusRequest, route: route,
       fulfilled: Set(state.skills.filter { $0.mastery > 0 }.map(\.id)),
-      searchTitle: "Find a skill", countText: L("%d skills", state.skills.count),
+      search: $search, searchSubmission: searchSubmission,
+      countText: L("%d skills", state.skills.count),
       legend: TreeStatus.allCases.map { DependencyGraphLegend(title: $0.title, color: $0.color) },
       onPick: { selected = $0 }
     ) { id, dimmed in

@@ -242,12 +242,14 @@ private enum WindowTool: String, Identifiable {
 
 private struct WindowToolbar: View {
   @EnvironmentObject var store: Store
+
   var body: some View {
+    let tools = windowTools(store)
     if #available(macOS 26, *) {
-      LiquidWindowToolbar()
+      LiquidWindowToolbar(tools: tools)
     } else {
       HStack(spacing: 8) {
-        ForEach(windowTools(store)) { tool in
+        ForEach(tools) { tool in
           WindowToolButton(tool: tool)
         }
       }
@@ -268,7 +270,7 @@ struct GlassIconButton: View {
       } label: {
         Image(systemName: symbol)
           .font(.system(size: 15, weight: .medium))
-          .frame(width: 36, height: 36)
+          .frame(width: WorkspaceHeaderLayout.controlSize, height: WorkspaceHeaderLayout.controlSize)
           .contentShape(Circle())
       }
       .buttonStyle(.plain)
@@ -280,8 +282,7 @@ struct GlassIconButton: View {
 
 @available(macOS 26, *)
 private struct LiquidWindowToolbar: View {
-  @EnvironmentObject var store: Store
-  private var tools: [WindowTool] { windowTools(store) }
+  let tools: [WindowTool]
   var body: some View {
     if tools.isEmpty {
       EmptyView()
@@ -313,12 +314,14 @@ struct LiquidGlassPlate<Content: View>: View {
   var leadingPad: CGFloat = 28
   var trailingPad: CGFloat = 0
   var verticalPad: CGFloat = 28
+  var allowsDrag = true
   @ViewBuilder var content: (Bool) -> Content
   @State private var stretch = CGSize.zero
   @State private var lift: CGFloat = 0
   @State private var touch = CGPoint.zero
   @State private var highlight: CGFloat = 0
-  @State private var glassSize = CGSize(width: 36, height: 36)
+  @State private var glassSize = CGSize(
+    width: WorkspaceHeaderLayout.controlSize, height: WorkspaceHeaderLayout.controlSize)
   @State private var dragged = false
   private var hitShape: AnyShape {
     circular ? AnyShape(Circle()) : AnyShape(Capsule())
@@ -331,8 +334,9 @@ struct LiquidGlassPlate<Content: View>: View {
   }
   var body: some View {
     let shape = glassTransform(size: glassSize, stretch: stretch)
+    let side = WorkspaceHeaderLayout.controlSize
     let cluster = content(dragged)
-      .frame(width: circular ? 36 : nil, height: 36)
+      .frame(width: circular ? side : nil, height: side)
       .fixedSize()
       .background { hitShape.fill(Color.primary.opacity(0.001)) }
       .contentShape(hitShape)
@@ -349,7 +353,7 @@ struct LiquidGlassPlate<Content: View>: View {
           .opacity(highlight * 0.1)
           .allowsHitTesting(false)
       }
-      .simultaneousGesture(pullGesture)
+      .simultaneousGesture(pullGesture, including: allowsDrag ? .all : .subviews)
     Group {
       if circular {
         cluster.glassEffect(.regular.interactive(), in: Circle())
@@ -358,6 +362,13 @@ struct LiquidGlassPlate<Content: View>: View {
       }
     }
     .onGeometryChange(for: CGSize.self, of: \.size) { glassSize = $0 }
+    .onChange(of: allowsDrag) { enabled in
+      guard !enabled else { return }
+      stretch = .zero
+      lift = 0
+      highlight = 0
+      dragged = false
+    }
     .scaleEffect(x: shape.sx, y: shape.sy)
     .offset(x: shape.tx, y: shape.ty)
     .padding(.leading, leadingPad)
@@ -434,7 +445,7 @@ private struct WindowToolButton: View {
   var body: some View {
     Image(systemName: tool.symbol)
       .font(.system(size: 15, weight: .medium))
-      .frame(width: 36, height: 36)
+      .frame(width: WorkspaceHeaderLayout.controlSize, height: WorkspaceHeaderLayout.controlSize)
       .padding(.leading, leading)
       .padding(.trailing, trailing)
       .background(Color.primary.opacity(0.001))
@@ -472,6 +483,97 @@ private struct WindowToolButton: View {
   }
 }
 
+private struct WorkspaceSearch: View {
+  let title: LocalizedStringKey
+  @Binding var text: String
+  @Binding var expanded: Bool
+  let submit: () -> Void
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @FocusState private var focused: Bool
+
+  var body: some View {
+    if #available(macOS 26, *) {
+      LiquidGlassPlate(circular: false, leadingPad: 0, verticalPad: 0, allowsDrag: !expanded) { dragged in
+        control(acceptClick: !dragged)
+      }
+    } else {
+      control(acceptClick: true)
+        .background(.regularMaterial, in: Capsule())
+        .overlay { Capsule().strokeBorder(Color.primary.opacity(0.09)).allowsHitTesting(false) }
+    }
+  }
+
+  private func control(acceptClick: Bool) -> some View {
+    let size = WorkspaceHeaderLayout.controlSize
+    let actionTitle: LocalizedStringKey = expanded ? "Close search" : "Search"
+    return HStack(spacing: 0) {
+      if expanded {
+        field.transition(.opacity)
+      }
+      Button {
+        if acceptClick { toggle() }
+      } label: {
+        Image(systemName: expanded ? "xmark" : "magnifyingglass")
+          .font(.system(size: 15, weight: .medium))
+          .frame(width: size, height: size)
+          .contentShape(Circle())
+      }
+      .buttonStyle(.plain)
+      .help(actionTitle)
+      .accessibilityLabel(actionTitle)
+    }
+    .frame(width: expanded ? 260 : size, height: size, alignment: .trailing)
+    .clipShape(Capsule())
+  }
+
+  private var field: some View {
+    HStack(spacing: 8) {
+      TextField(title, text: $text)
+        .textFieldStyle(.plain)
+        .focused($focused)
+        .onSubmit(submit)
+      if !text.isEmpty {
+        Button {
+          text = ""
+          focused = true
+        } label: {
+          Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("Clear search")
+        .help("Clear search")
+      }
+    }
+    .font(.system(size: 13))
+    .padding(.leading, 14)
+    .onAppear {
+      // Install the new field before asking AppKit to move focus away from the page.
+      DispatchQueue.main.async { focused = true }
+    }
+    .onExitCommand(perform: close)
+  }
+
+  private func toggle() {
+    if expanded {
+      close()
+    } else {
+      setExpanded(true)
+    }
+  }
+
+  private func close() {
+    focused = false
+    text = ""
+    setExpanded(false)
+  }
+
+  private func setExpanded(_ value: Bool) {
+    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.28)) {
+      expanded = value
+    }
+  }
+}
+
 struct RootView: View {
   @EnvironmentObject var notifications: Notifications
   @Environment(\.openWindow) private var openWindow
@@ -480,6 +582,9 @@ struct RootView: View {
   @AppStorage("style") private var style = "minimal"
   @SceneStorage("mainSidebarVisible") private var sidebarVisible = true
   @EnvironmentObject var store: Store
+  @State private var searchVisible = false
+  @State private var search = ""
+  @State private var searchSubmission = UUID()
   var body: some View {
     let _ = locale
     Group {
@@ -543,6 +648,7 @@ struct RootView: View {
 
   private func workspace(state: GameState, summary: Summary) -> some View {
     let page = store.page ?? .dashboard
+    let searchTitle = searchTitle(for: page)
     return HStack(spacing: 0) {
       if sidebarVisible {
         SidebarIsland(profile: state.settings) { sidebarVisible = false }
@@ -552,6 +658,12 @@ struct RootView: View {
           WorkspaceHeader(sidebarHidden: !sidebarVisible) {
             controls(for: page)
             Spacer(minLength: 0)
+            if let searchTitle {
+              WorkspaceSearch(
+                title: searchTitle, text: $search, expanded: $searchVisible,
+                submit: { searchSubmission = UUID() }
+              )
+            }
             WindowToolbar()
           }
           .zIndex(1)
@@ -562,9 +674,26 @@ struct RootView: View {
     }
     .ignoresSafeArea(.container, edges: .top)
     .onChange(of: store.page) { page in
+      closeSearch()
       if page != .skills { store.endSkillEditing() }
       if page != .skillTree && page != .settings { store.questTreeSkill = nil }
     }
+    .onChange(of: store.questTreeSkill) { _ in closeSearch() }
+    .onDisappear(perform: closeSearch)
+  }
+
+  private func searchTitle(for page: Page) -> LocalizedStringKey? {
+    switch page {
+    case .quests: "Search quests"
+    case .journal: "Search journal"
+    case .skillTree: store.questTreeSkill == nil ? "Find a skill" : "Find a quest"
+    default: nil
+    }
+  }
+
+  private func closeSearch() {
+    searchVisible = false
+    search = ""
   }
 
   private func controls(for page: Page) -> WorkspaceControls {
@@ -593,11 +722,12 @@ struct RootView: View {
     case .dashboard: DashboardView(state: state, summary: summary)
     case .character: CharacterView(state: state, summary: summary)
     case .skills: SkillsView(state: state, summary: summary)
-    case .skillTree: SkillTreeView(state: state, summary: summary)
-    case .quests: QuestsView(state: state, summary: summary)
+    case .skillTree:
+      SkillTreeView(state: state, summary: summary, search: $search, searchSubmission: searchSubmission)
+    case .quests: QuestsView(state: state, summary: summary, search: $search)
     case .balance: BalanceView(state: state, summary: summary)
     case .analytics: AnalyticsView(state: state, summary: summary)
-    case .journal: JournalView(state: state)
+    case .journal: JournalView(state: state, search: $search)
     case .settings:
       SettingsView(workspaceControls: controls(for: page))
         .background { SettingsBackSwipe(onBack: goBack) }

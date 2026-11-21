@@ -56,7 +56,7 @@ struct SettingsView: View {
         if let workspaceControls {
           workspaceControls
         } else {
-          Color.clear.frame(width: 36).accessibilityHidden(true)
+          Color.clear.frame(width: WorkspaceHeaderLayout.controlSize).accessibilityHidden(true)
         }
         Spacer(minLength: 0)
         SettingsTabPicker()
@@ -67,7 +67,9 @@ struct SettingsView: View {
       settingsPage
     }
     .background {
-      AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea()
+      if workspaceControls == nil {
+        AppChrome.canvas(style: style, scheme: scheme).ignoresSafeArea()
+      }
     }
     .onAppear(perform: adoptProfile)
     .onChange(of: store.state?.settings.name) { _ in adoptProfile() }

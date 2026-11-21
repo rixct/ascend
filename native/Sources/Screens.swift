@@ -844,10 +844,10 @@ struct QuestsView: View {
   @EnvironmentObject var store: Store
   let state: GameState
   let summary: Summary
+  @Binding var search: String
   @State private var selected: String?
   @State private var expanded = Set<String>()
   @State private var filter = 0
-  @State private var search = ""
   private var quests: [Quest] {
     state.quests.reversed().filter {
       (filter == 2 || (filter == 0 ? !$0.closed : $0.closed))
@@ -881,13 +881,10 @@ struct QuestsView: View {
     let practice = QuestPractice.totals(state.sessions)
     return HStack(spacing: 0) {
       VStack(spacing: 0) {
-        VStack(spacing: 10) {
-          CanvasTabs(options: [("Active", 0), ("Closed", 1), ("All", 2)],
-                     selection: $filter, label: "Quest status")
-          CanvasSearchField(title: "Search quests", text: $search)
-        }
-        .padding(.trailing, 14)
-        .padding(.bottom, 12)
+        CanvasTabs(options: [("Active", 0), ("Closed", 1), ("All", 2)],
+                   selection: $filter, label: "Quest status")
+          .padding(.trailing, 14)
+          .padding(.bottom, 12)
         RowDivider()
         ScrollView {
           LazyVStack(alignment: .leading, spacing: 4) {
@@ -1117,10 +1114,7 @@ struct BalanceView: View {
         title: "This week", detail: summary.balance.map { L("%d%% complete", Int($0.rounded())) }
       ) {
         if targets.isEmpty {
-          EmptyState(
-            symbol: "scope", title: "No weekly goals yet",
-            buttonTitle: "Add a weekly goal", compact: true
-          ) { store.sheet = .target }
+          EmptyState(symbol: "scope", title: "No weekly goals yet", compact: true)
         } else {
           VStack(spacing: 22) { ForEach(targets) { target in targetRow(target) } }
         }
@@ -1346,8 +1340,8 @@ struct JournalView: View {
   @Environment(\.locale) private var locale
   @EnvironmentObject var store: Store
   let state: GameState
+  @Binding var search: String
   @State private var tab = 0
-  @State private var search = ""
   private var entries: [JournalEntry] {
     state.journal.reversed().filter {
       search.isEmpty || $0.text.localizedCaseInsensitiveContains(search)
@@ -1369,15 +1363,10 @@ struct JournalView: View {
     let _ = locale
     PageFrame {
       VStack(alignment: .leading, spacing: 0) {
-        HStack(spacing: 16) {
-          CanvasTabs(options: [("Entries", 0), ("Activity", 1)],
-                     selection: $tab, label: "Journal filter")
-            .frame(width: 166)
-          Spacer(minLength: 12)
-          CanvasSearchField(title: "Search journal", text: $search)
-            .frame(maxWidth: 226)
-        }
-        .padding(.bottom, 14)
+        CanvasTabs(options: [("Entries", 0), ("Activity", 1)],
+                   selection: $tab, label: "Journal filter")
+          .frame(width: 166)
+          .padding(.bottom, 14)
         RowDivider()
         journalBody
       }

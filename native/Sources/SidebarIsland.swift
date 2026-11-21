@@ -47,12 +47,8 @@ struct SidebarIsland: View {
       }
       .frame(width: boundedWidth(savedWidth + dragOffset))
       .clipShape(shape)
-      .background {
-        shape
-          .fill(AppChrome.island(scheme: scheme))
-          .overlay { shape.strokeBorder(Color.primary.opacity(0.09), lineWidth: 1) }
-          .shadow(color: .black.opacity(scheme == .dark ? 0.19 : 0.07), radius: 8, y: 2)
-      }
+      .background(AppChrome.sidebar(scheme: scheme), in: shape)
+      .overlay { shape.strokeBorder(Color.primary.opacity(0.09)).allowsHitTesting(false) }
 
       resizeHandle
     }
@@ -142,9 +138,11 @@ struct WorkspaceHeader<Content: View>: View {
 
   var body: some View {
     HStack(spacing: 10, content: content)
-      .padding(.leading, sidebarHidden ? 94 : 16)
-      .padding(.trailing, 20)
-      .frame(height: 52)
+      .frame(height: WorkspaceHeaderLayout.controlSize)
+      .padding(.leading, sidebarHidden ? 94 : WorkspaceHeaderLayout.sideInset)
+      .padding(.trailing, WorkspaceHeaderLayout.sideInset)
+      .padding(.top, WorkspaceHeaderLayout.topInset)
+      .padding(.bottom, WorkspaceHeaderLayout.bottomInset)
       .background { WindowDragRegion() }
   }
 }

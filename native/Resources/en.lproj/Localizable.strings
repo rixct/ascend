@@ -202,6 +202,7 @@
 "Closed" = "Closed";
 "All" = "All";
 "Quest status" = "Quest status";
+"Search" = "Search";
 "Search quests" = "Search quests";
 "Search journal" = "Search journal";
 "No matching entries" = "No matching entries";
@@ -213,6 +214,7 @@
 "Turn something you want to do into a quest with a clear outcome." = "Turn something you want to do into a quest with a clear outcome.";
 "Try a different search or browse all your quests." = "Try a different search or browse all your quests.";
 "Clear search" = "Clear search";
+"Close search" = "Close search";
 "Skill" = "Skill";
 "Time" = "Time";
 "Status" = "Status";
@@ -227,7 +229,6 @@
 "Add goal…" = "Add goal…";
 "Give your week a direction" = "Give your week a direction";
 "Set a target for a skill you want to develop." = "Set a target for a skill you want to develop.";
-"Add a weekly goal" = "Add a weekly goal";
 "Today's check-in" = "Today's check-in";
 "Update…" = "Update…";
 "Energy" = "Energy";
