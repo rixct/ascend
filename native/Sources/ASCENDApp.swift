@@ -57,7 +57,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       CommandGroup(after: .newItem) {
         Button(L("New quest…")) { store.newQuest() }
         Button(L("New skill…")) { store.sheet = .skill }
+        Button(L("New journal entry…")) { store.sheet = .journal }
+          .disabled(store.state?.settings.onboarded != true || store.sheet != nil)
       }
+      WorkspaceSearchCommands(store: store)
     }
     Settings {
       SettingsView().environmentObject(store).environmentObject(notifications).environmentObject(store.presence)
@@ -74,6 +77,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       MenuBarStatus(active: store.state?.active)
     }
     .menuBarExtraStyle(.menu)
+  }
+}
+
+private struct WorkspaceSearchKey: FocusedValueKey {
+  typealias Value = () -> Void
+}
+
+private extension FocusedValues {
+  var workspaceSearch: (() -> Void)? {
+    get { self[WorkspaceSearchKey.self] }
+    set { self[WorkspaceSearchKey.self] = newValue }
+  }
+}
+
+private struct WorkspaceSearchCommands: Commands {
+  @FocusedValue(\.workspaceSearch) private var search
+  @AppStorage("shortcutsEnabled") private var shortcutsEnabled = true
+  @ObservedObject var store: Store
+
+  var body: some Commands {
+    CommandGroup(after: .textEditing) {
+      Button(L("Search")) { search?() }
+        .keyboardShortcut("f", modifiers: .command)
+        .disabled(!shortcutsEnabled || search == nil || store.sheet != nil
+          || store.preview != nil || store.error != nil)
+    }
   }
 }
 
@@ -192,7 +221,7 @@ struct TrayMenu: View {
 }
 
 private enum WindowTool: String, Identifiable {
-  case newQuest, newSkill, deleteSkills, cancelEdit, selectSkills, newTarget, newEntry, focus,
+  case newQuest, newSkill, deleteSkills, cancelEdit, selectSkills, newTarget, focus,
     settings, skillTree, milestones
   var id: String { rawValue }
   var symbol: String {
@@ -201,7 +230,6 @@ private enum WindowTool: String, Identifiable {
     case .deleteSkills: "trash"
     case .cancelEdit: "xmark"
     case .selectSkills: "pencil"
-    case .newEntry: "square.and.pencil"
     case .focus: "viewfinder"
     case .settings: "gearshape"
     case .skillTree: "point.3.filled.connected.trianglepath.dotted"
@@ -216,7 +244,6 @@ private enum WindowTool: String, Identifiable {
     case .cancelEdit: "Cancel"
     case .selectSkills: "Select skills"
     case .newTarget: "Weekly goal"
-    case .newEntry: "New entry"
     case .focus: "Focus mode"
     case .settings: "Settings"
     case .skillTree: "Skill tree"
@@ -232,7 +259,7 @@ private enum WindowTool: String, Identifiable {
   case .skills:
     store.skillEditing ? [.deleteSkills, .cancelEdit] : [.skillTree, .newSkill, .selectSkills]
   case .balance: [.newTarget, .focus]
-  case .journal: [.newEntry, .focus]
+  case .journal: [.focus]
   case .character: [.milestones, .focus, .settings]
   case .analytics: [.focus]
   case .settings: []
@@ -474,7 +501,6 @@ private struct WindowToolButton: View {
     case .cancelEdit: store.endSkillEditing()
     case .selectSkills: store.skillEditing = true
     case .newTarget: store.sheet = .target
-    case .newEntry: store.sheet = .journal
     case .focus: store.focusMode = true
     case .settings: store.openSettings()
     case .skillTree: store.navigate(.skillTree)
@@ -492,15 +518,18 @@ private struct WorkspaceSearch: View {
   @FocusState private var focused: Bool
 
   var body: some View {
-    if #available(macOS 26, *) {
-      LiquidGlassPlate(circular: false, leadingPad: 0, verticalPad: 0, allowsDrag: !expanded) { dragged in
-        control(acceptClick: !dragged)
+    Group {
+      if #available(macOS 26, *) {
+        LiquidGlassPlate(circular: false, leadingPad: 0, verticalPad: 0, allowsDrag: !expanded) { dragged in
+          control(acceptClick: !dragged)
+        }
+      } else {
+        control(acceptClick: true)
+          .background(.regularMaterial, in: Capsule())
+          .overlay { Capsule().strokeBorder(Color.primary.opacity(0.09)).allowsHitTesting(false) }
       }
-    } else {
-      control(acceptClick: true)
-        .background(.regularMaterial, in: Capsule())
-        .overlay { Capsule().strokeBorder(Color.primary.opacity(0.09)).allowsHitTesting(false) }
     }
+    .focusedSceneValue(\.workspaceSearch, open)
   }
 
   private func control(acceptClick: Bool) -> some View {
@@ -557,6 +586,14 @@ private struct WorkspaceSearch: View {
     if expanded {
       close()
     } else {
+      open()
+    }
+  }
+
+  private func open() {
+    if expanded {
+      focused = true
+    } else {
       setExpanded(true)
     }
   }
@@ -574,6 +611,107 @@ private struct WorkspaceSearch: View {
   }
 }
 
+private struct WorkspaceTabs: NSViewRepresentable {
+  @Environment(\.locale) private var locale
+  let options: [(title: String, value: Int)]
+  @Binding var selection: Int
+  let label: String
+
+  func makeCoordinator() -> Coordinator {
+    Coordinator(selection: $selection)
+  }
+
+  func makeNSView(context: Context) -> NSView {
+    let control = context.coordinator.control
+    control.trackingMode = .selectOne
+    control.segmentDistribution = .fillEqually
+    control.target = context.coordinator
+    control.action = #selector(Coordinator.selectSegment(_:))
+    control.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    #if compiler(>=6.4)
+    if #available(macOS 27, *) { control.role = .tabs }
+    #endif
+    if #available(macOS 26, *) {
+      control.controlSize = .extraLarge
+      control.borderShape = .capsule
+      let fontSize = control.font?.pointSize ?? NSFont.systemFontSize(for: control.controlSize)
+      control.font = NSFont.systemFont(ofSize: fontSize, weight: .light)
+      let glass = NSGlassEffectView()
+      glass.contentView = control
+      #if compiler(>=6.4)
+      if #available(macOS 27, *) { glass.effectIsInteractive = true }
+      #endif
+      return WorkspaceTabSlot(glass: glass)
+    }
+    control.controlSize = .large
+    return control
+  }
+
+  func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSView, context: Context) -> CGSize? {
+    guard #available(macOS 26, *), let width = proposal.width, let height = proposal.height else {
+      return nil
+    }
+    return CGSize(width: width, height: height)
+  }
+
+  func updateNSView(_ view: NSView, context: Context) {
+    let _ = locale
+    let control = context.coordinator.control
+    context.coordinator.selection = $selection
+    control.setAccessibilityLabel(L(label))
+    if control.segmentCount != options.count { control.segmentCount = options.count }
+    for (index, option) in options.enumerated() {
+      let title = L(option.title)
+      if control.label(forSegment: index) != title { control.setLabel(title, forSegment: index) }
+      if control.tag(forSegment: index) != option.value { control.setTag(option.value, forSegment: index) }
+    }
+    if let index = options.firstIndex(where: { $0.value == selection }),
+      control.selectedSegment != index
+    {
+      control.selectedSegment = index
+    }
+  }
+
+  final class Coordinator: NSObject {
+    let control = NSSegmentedControl()
+    var selection: Binding<Int>
+
+    init(selection: Binding<Int>) { self.selection = selection }
+
+    @objc func selectSegment(_ control: NSSegmentedControl) {
+      let index = control.selectedSegment
+      guard index >= 0 else { return }
+      let value = control.tag(forSegment: index)
+      if selection.wrappedValue != value { selection.wrappedValue = value }
+    }
+  }
+}
+
+@available(macOS 26, *)
+private final class WorkspaceTabSlot: NSView {
+  private let glass: NSGlassEffectView
+
+  init(glass: NSGlassEffectView) {
+    self.glass = glass
+    super.init(frame: .zero)
+    addSubview(glass)
+  }
+
+  required init?(coder: NSCoder) { fatalError("init(coder:) is unavailable") }
+
+  override func layout() {
+    super.layout()
+    guard let trackHeight = glass.contentView?.intrinsicContentSize.height, trackHeight > 0,
+      frame.width > 0, frame.height > 0
+    else { return }
+    // Scale the containing coordinate space and let AppKit lay out the segments at their native height.
+    let trackSize = CGSize(width: frame.width * trackHeight / frame.height, height: trackHeight)
+    if bounds.size != trackSize { setBoundsSize(trackSize) }
+    if glass.frame != bounds { glass.frame = bounds }
+    if glass.cornerRadius != trackHeight / 2 { glass.cornerRadius = trackHeight / 2 }
+  }
+}
+
 struct RootView: View {
   @EnvironmentObject var notifications: Notifications
   @Environment(\.openWindow) private var openWindow
@@ -585,6 +723,8 @@ struct RootView: View {
   @State private var searchVisible = false
   @State private var search = ""
   @State private var searchSubmission = UUID()
+  @State private var journalTab = 0
+  @State private var questFilter = 0
   var body: some View {
     let _ = locale
     Group {
@@ -649,6 +789,7 @@ struct RootView: View {
   private func workspace(state: GameState, summary: Summary) -> some View {
     let page = store.page ?? .dashboard
     let searchTitle = searchTitle(for: page)
+    let controls = controls(for: page)
     return HStack(spacing: 0) {
       if sidebarVisible {
         SidebarIsland(profile: state.settings) { sidebarVisible = false }
@@ -656,7 +797,8 @@ struct RootView: View {
       VStack(spacing: 0) {
         if page != .settings {
           WorkspaceHeader(sidebarHidden: !sidebarVisible) {
-            controls(for: page)
+            controls
+            tabs(for: page)
             Spacer(minLength: 0)
             if let searchTitle {
               WorkspaceSearch(
@@ -672,14 +814,41 @@ struct RootView: View {
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    .background {
+      if let goBack = controls.goBack {
+        WorkspaceBackSwipe(onBack: goBack).allowsHitTesting(false)
+      }
+    }
     .ignoresSafeArea(.container, edges: .top)
     .onChange(of: store.page) { page in
       closeSearch()
+      if page != .journal { journalTab = 0 }
+      if page != .quests { questFilter = 0 }
       if page != .skills { store.endSkillEditing() }
       if page != .skillTree && page != .settings { store.questTreeSkill = nil }
     }
     .onChange(of: store.questTreeSkill) { _ in closeSearch() }
-    .onDisappear(perform: closeSearch)
+    .onDisappear {
+      closeSearch()
+      journalTab = 0
+      questFilter = 0
+    }
+  }
+
+  @ViewBuilder private func tabs(for page: Page) -> some View {
+    switch page {
+    case .journal:
+      WorkspaceTabs(
+        options: [("Entries", 0), ("Activity", 1)], selection: $journalTab,
+        label: "Journal filter")
+        .frame(width: 166, height: WorkspaceHeaderLayout.controlSize)
+    case .quests:
+      WorkspaceTabs(
+        options: [("Active", 0), ("Closed", 1), ("All", 2)], selection: $questFilter,
+        label: "Quest status")
+        .frame(width: 190, height: WorkspaceHeaderLayout.controlSize)
+    default: EmptyView()
+    }
   }
 
   private func searchTitle(for page: Page) -> LocalizedStringKey? {
@@ -724,13 +893,12 @@ struct RootView: View {
     case .skills: SkillsView(state: state, summary: summary)
     case .skillTree:
       SkillTreeView(state: state, summary: summary, search: $search, searchSubmission: searchSubmission)
-    case .quests: QuestsView(state: state, summary: summary, search: $search)
+    case .quests: QuestsView(state: state, summary: summary, search: $search, filter: $questFilter)
     case .balance: BalanceView(state: state, summary: summary)
     case .analytics: AnalyticsView(state: state, summary: summary)
-    case .journal: JournalView(state: state, search: $search)
+    case .journal: JournalView(state: state, search: $search, tab: $journalTab)
     case .settings:
       SettingsView(workspaceControls: controls(for: page))
-        .background { SettingsBackSwipe(onBack: goBack) }
     }
   }
 }
@@ -756,7 +924,7 @@ struct WorkspaceControls: View {
   }
 }
 
-private struct SettingsBackSwipe: NSViewRepresentable {
+private struct WorkspaceBackSwipe: NSViewRepresentable {
   var onBack: () -> Void
 
   func makeCoordinator() -> Coordinator {
@@ -779,9 +947,7 @@ private struct SettingsBackSwipe: NSViewRepresentable {
     var onBack: () -> Void
     var monitor: Any?
     weak var view: NSView?
-    var active = false
-    var ignored = false
-    var travel: CGFloat = 0
+    private var tracking = BackSwipeTracking()
     init(onBack: @escaping () -> Void) {
       self.onBack = onBack
     }
@@ -800,37 +966,72 @@ private struct SettingsBackSwipe: NSViewRepresentable {
       guard let window = view?.window, event.window === window, window.attachedSheet == nil,
         event.hasPreciseScrollingDeltas
       else { return event }
-      let dx = event.scrollingDeltaX
-      let dy = event.scrollingDeltaY
-      if event.phase == .began {
-        active = false
-        ignored = false
-        travel = 0
-      }
-      if ignored { return event }
-      if event.phase == .changed {
-        if !active {
-          if abs(dx) < 0.8 && abs(dy) < 0.8 { return event }
-          if dx > 1, abs(dx) > abs(dy) * 1.2 {
-            active = true
-          } else {
-            ignored = true
-            return event
-          }
-        }
-        travel = max(0, travel + dx)
+      switch tracking.update(
+        phase: event.phase, momentum: !event.momentumPhase.isEmpty,
+        dx: event.scrollingDeltaX, dy: event.scrollingDeltaY,
+        canPanBack: { self.canPanTowardStart(event, in: window) }
+      ) {
+      case .forward: return event
+      case .consume: return nil
+      case .goBack:
+        onBack()
         return nil
       }
-      if event.phase == .ended || event.phase == .cancelled {
-        if active {
-          let commit = event.phase == .ended && travel > 90
-          active = false
-          if commit { onBack() }
-          return nil
+    }
+
+    private func canPanTowardStart(_ event: NSEvent, in window: NSWindow) -> Bool {
+      guard let content = window.contentView, let container = content.superview else { return false }
+      let location = container.convert(event.locationInWindow, from: nil)
+      var target = content.hitTest(location)
+      while let hit = target {
+        if let scroll = hit as? NSScrollView, let document = scroll.documentView,
+          scroll.documentVisibleRect.minX > document.bounds.minX + 1
+        {
+          return true
         }
+        target = hit.superview
       }
-      if active, event.momentumPhase != [] { return nil }
-      return event
+      return false
+    }
+  }
+}
+
+private struct BackSwipeTracking {
+  enum Result { case forward, consume, goBack }
+  private enum State { case waiting, forwarding, tracking(CGFloat), finished }
+  private var state = State.waiting
+
+  mutating func update(
+    phase: NSEvent.Phase, momentum: Bool, dx: CGFloat, dy: CGFloat, canPanBack: () -> Bool
+  ) -> Result {
+    if momentum {
+      if case .finished = state { return .consume }
+      return .forward
+    }
+    if phase == .began {
+      state = .waiting
+      return .forward
+    }
+    switch (state, phase) {
+    case (.waiting, .changed):
+      guard abs(dx) >= 0.8 || abs(dy) >= 0.8 else { return .forward }
+      guard dx > 1, dx > abs(dy) * 1.2, !canPanBack() else {
+        state = .forwarding
+        return .forward
+      }
+      state = .tracking(dx)
+      return .consume
+    case (.tracking(let travel), .changed):
+      state = .tracking(max(0, travel + dx))
+      return .consume
+    case (.tracking(let travel), .ended):
+      state = .finished
+      return travel > 90 ? .goBack : .consume
+    case (.tracking, .cancelled):
+      state = .finished
+      return .consume
+    default:
+      return .forward
     }
   }
 }
