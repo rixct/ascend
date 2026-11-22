@@ -845,9 +845,9 @@ struct QuestsView: View {
   let state: GameState
   let summary: Summary
   @Binding var search: String
+  @Binding var filter: Int
   @State private var selected: String?
   @State private var expanded = Set<String>()
-  @State private var filter = 0
   private var quests: [Quest] {
     state.quests.reversed().filter {
       (filter == 2 || (filter == 0 ? !$0.closed : $0.closed))
@@ -856,6 +856,7 @@ struct QuestsView: View {
   }
   var body: some View {
     let _ = locale
+    let visibleQuests = quests
     PageFrame {
       Group {
         if state.quests.isEmpty {
@@ -865,35 +866,28 @@ struct QuestsView: View {
             buttonTitle: "Create a quest"
           ) { store.sheet = .quest }
         } else {
-          questSplit
+          questSplit(visibleQuests)
         }
       }
       .padding(.horizontal, 32)
       .padding(.top, 20)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
-    .onAppear { if selected == nil { selected = quests.first?.id } }
-    .onChange(of: quests.map(\.id)) { ids in
+    .onAppear { if selected == nil { selected = visibleQuests.first?.id } }
+    .onChange(of: visibleQuests.map(\.id)) { ids in
       if selected == nil || !ids.contains(selected ?? "") { selected = ids.first }
     }
   }
-  private var questSplit: some View {
+  private func questSplit(_ quests: [Quest]) -> some View {
     let practice = QuestPractice.totals(state.sessions)
     return HStack(spacing: 0) {
-      VStack(spacing: 0) {
-        CanvasTabs(options: [("Active", 0), ("Closed", 1), ("All", 2)],
-                   selection: $filter, label: "Quest status")
-          .padding(.trailing, 14)
-          .padding(.bottom, 12)
-        RowDivider()
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 4) {
-            ForEach(quests) { quest in questRow(quest) }
-          }
-          .padding(.vertical, 8)
-          .padding(.trailing, 12)
-          .frame(maxWidth: .infinity, alignment: .leading)
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 4) {
+          ForEach(quests) { quest in questRow(quest) }
         }
+        .padding(.vertical, 8)
+        .padding(.trailing, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
       }
       .frame(width: 222)
       .frame(maxHeight: .infinity, alignment: .top)
@@ -1338,23 +1332,22 @@ struct AnalyticsView: View {
 
 struct JournalView: View {
   @Environment(\.locale) private var locale
-  @EnvironmentObject var store: Store
   let state: GameState
   @Binding var search: String
-  @State private var tab = 0
+  @Binding var tab: Int
   private var entries: [JournalEntry] {
     state.journal.reversed().filter {
       search.isEmpty || $0.text.localizedCaseInsensitiveContains(search)
     }
   }
   private var events: [GameEvent] {
-    state.events.reversed().filter {
-      let title = L(eventTitle($0.kind))
-      return search.isEmpty || title.localizedCaseInsensitiveContains(search)
+    if search.isEmpty { return Array(state.events.reversed()) }
+    return state.events.reversed().filter {
+      L(eventTitle($0.kind)).localizedCaseInsensitiveContains(search)
         || englishText($0.description).localizedCaseInsensitiveContains(search)
     }
   }
-  private var entriesByDay: [(day: String, entries: [JournalEntry])] {
+  private func entriesByDay(_ entries: [JournalEntry]) -> [(day: String, entries: [JournalEntry])] {
     Dictionary(grouping: entries, by: \.day)
       .map { (day: $0.key, entries: $0.value) }
       .sorted { $0.day > $1.day }
@@ -1362,14 +1355,7 @@ struct JournalView: View {
   var body: some View {
     let _ = locale
     PageFrame {
-      VStack(alignment: .leading, spacing: 0) {
-        CanvasTabs(options: [("Entries", 0), ("Activity", 1)],
-                   selection: $tab, label: "Journal filter")
-          .frame(width: 166)
-          .padding(.bottom, 14)
-        RowDivider()
-        journalBody
-      }
+      journalBody
       .frame(maxWidth: 860)
       .padding(.horizontal, 32)
       .padding(.top, 20)
@@ -1378,17 +1364,16 @@ struct JournalView: View {
   }
   @ViewBuilder private var journalBody: some View {
     if tab == 0 {
-      if entries.isEmpty {
+      let visible = entries
+      if visible.isEmpty {
         EmptyState(
           symbol: search.isEmpty ? "square.and.pencil" : "magnifyingglass",
           title: search.isEmpty ? "No journal entries yet" : "No matching entries",
-          buttonTitle: search.isEmpty ? "New entry" : "Clear search"
-        ) {
-          if search.isEmpty { store.sheet = .journal } else { search = "" }
-        }
+          buttonTitle: search.isEmpty ? nil : "Clear search"
+        ) { search = "" }
         .frame(maxHeight: .infinity, alignment: .top)
       } else {
-        let groups = entriesByDay
+        let groups = entriesByDay(visible)
         ScrollView {
           LazyVStack(alignment: .leading, spacing: 22) {
             ForEach(groups, id: \.day) { group in
@@ -1408,7 +1393,13 @@ struct JournalView: View {
           .padding(.vertical, 22)
         }
       }
-    } else if events.isEmpty {
+    } else {
+      activity(events)
+    }
+  }
+
+  @ViewBuilder private func activity(_ events: [GameEvent]) -> some View {
+    if events.isEmpty {
       EmptyState(
         symbol: search.isEmpty ? "clock.arrow.circlepath" : "magnifyingglass",
         title: search.isEmpty ? "No activity yet" : "No matching entries",
@@ -1420,7 +1411,7 @@ struct JournalView: View {
     } else {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
-          ForEach(Array(events)) { event in
+          ForEach(events) { event in
             DisclosureGroup {
               Text(englishText(event.description)).font(.system(size: 12)).foregroundStyle(
                 .secondary
@@ -1438,15 +1429,17 @@ struct JournalView: View {
       }
     }
   }
+  private static let eventTitles = [
+    "session_completed": "Session completed", "quest_created": "Quest created",
+    "plan_committed": "Plan accepted", "plan_changed": "Plan updated",
+    "mastery_verified": "Mastery verified", "checkin": "Check-in updated",
+    "target_set": "Weekly goal set", "quest_status": "Quest status changed",
+    "profile_created": "Profile created", "import": "Data restored",
+    "routine_updated": "Routine updated",
+  ]
+
   private func eventTitle(_ kind: String) -> String {
-    [
-      "session_completed": "Session completed", "quest_created": "Quest created",
-      "plan_committed": "Plan accepted", "plan_changed": "Plan updated",
-      "mastery_verified": "Mastery verified", "checkin": "Check-in updated",
-      "target_set": "Weekly goal set", "quest_status": "Quest status changed",
-      "profile_created": "Profile created", "import": "Data restored",
-      "routine_updated": "Routine updated",
-    ][kind] ?? "Activity"
+    Self.eventTitles[kind] ?? "Activity"
   }
 }
 

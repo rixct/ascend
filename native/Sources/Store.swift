@@ -360,9 +360,15 @@ import UniformTypeIdentifiers
         && state.sessions.contains { $0.quest_id == quest.id && $0.day == summary.today })
   }
   private func handleShortcut(_ event: NSEvent) -> Bool {
-    guard UserDefaults.standard.object(forKey: "shortcutsEnabled") as? Bool ?? true,
-      event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command
-    else { return false }
+    guard UserDefaults.standard.object(forKey: "shortcutsEnabled") as? Bool ?? true else {
+      return false
+    }
+    let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+    if event.keyCode == 3, modifiers == [.command, .shift], sheet == nil {
+      if !event.isARepeat { focusMode.toggle() }
+      return true
+    }
+    guard modifiers == .command else { return false }
     switch event.keyCode {
     case 18: navigate(.dashboard)
     case 19: navigate(.skills)
@@ -370,9 +376,12 @@ import UniformTypeIdentifiers
     case 21: navigate(.balance)
     case 45: newQuest()
     case 38: navigate(.journal)
-    case 3: focusMode.toggle()
-    case 1: if sheet != nil { NotificationCenter.default.post(name: .ascendSave, object: nil) }
-    case 36: if state?.active != nil { send("pause") }
+    case 1:
+      guard sheet != nil else { return false }
+      NotificationCenter.default.post(name: .ascendSave, object: nil)
+    case 36:
+      guard state?.active != nil, sheet == nil else { return false }
+      send("pause")
     default: return false
     }
     return true
